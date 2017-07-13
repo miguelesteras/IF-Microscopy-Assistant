@@ -12,6 +12,7 @@ Inputs: cell array of rgb images or video frames (uint8) and binary mask of sing
 Outputs: --- work in progress ---
 <br><br><br><br>
 **Reference**
+-------------
 <br>
 This code is part of the project: <br>
 'Tracking of temporally occluded or overlapping structures in live cell microscopy' by Miguel Esteras. <br>
