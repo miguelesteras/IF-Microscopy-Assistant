@@ -15,4 +15,4 @@ Outputs: cell array [s x f] containg the Pixel Idx List of cell sequences. s = n
 <br>
 This code is part of the project: <br>
 'Tracking of temporally occluded or overlapping structures in live cell microscopy' by Miguel Esteras. <br>
-Department of Computer Science at City, University of London.
+Department of Computer Science at City, University of London
