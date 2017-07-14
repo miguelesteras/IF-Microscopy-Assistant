@@ -4,12 +4,13 @@ This project aims to construct a cloud-based service to help with the analysis a
 <br><br>
 ## Code Files
 <br>
--> create_masks.mat (MATLAB R2017a) <br>
+-> create_masks.m (MATLAB R2017a) <br>
 Inputs: a .tiff file containing a set of rgb images in which [red channel = nucleus] and [green channel = cytoplasm. <br>
 Output: cell array of rgb images or video frames (uint8), binary mask of single cells, binary mask of cell clusters and binary mask of nucleus. <br><br>
--> create_dataSet.mat  (MATLAB R2017a) <br>
+-> create_sequences.m  (MATLAB R2017a) <br>
 Inputs: cell array of rgb images or video frames (uint8) and binary mask of single cells. <br>
-Outputs: _work in progress_
+Outputs: cell array [s x f] containg the Pixel Idx List of cell sequences. <br>
+Where s = no. unique sequences, f = no. video frames. 
 <br><br><br><br>
 **Reference**
 <br>
