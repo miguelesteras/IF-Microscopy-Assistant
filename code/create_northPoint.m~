@@ -1,0 +1,41 @@
+%% Phase 3. Create Orientation (North point)
+%   ======================================================================
+%   Code by Miguel Esteras-Bejar, 07/2017
+%   This code is part of the project:
+%   'Tracking of temporally occluded or overlapping structures in live cell
+%   microscopy'
+%   This codes aims to:
+%   1. Determine the orientation of each cell based on the distance between
+%   contour pixels and center of mass. 
+%   ======================================================================
+
+%% Build data set of single cells
+
+files = dir('*_metadata.mat');      
+num_files = length(files);
+for i = 1:num_files
+    load(files(i).name,'metadata');                                     % load files from disk
+    load(strcat(metadata.name,'_cellSequences.mat'),'cellSequences');   
+    load(strcat(metadata.name,'_singleCellMask.mat'),'singleCellMask');
+
+    northPoints = cell(size(cellSequences));        % initialize array for north point coordenates for full view singl
+    index = find(~cellfun(@isempty,cellSequences)); % non empty cells in cell sequences array
+    
+    for j = 1:size(index)
+        selection = cellSequences{index(j)};
+        image = false(metadata.imageSize);
+        image(selection) = true;     
+        stats = regionprops(image,'centroid');
+        center = stats.Centroid
+        SE = strel('disk',5);
+        contour = bwmorph(imopen(image,SE),'remove');        
+        stats = regionprops(contour,'PixelList');
+        coordenates = stats.PixelList;
+        L2norm = (coordenates(:,1) - round(center.Centroid(1))).^2 + (coordenates(:,2) - round(center.Centroid(2))).^2
+
+        
+    end
+    
+    save(strcat(metadata.name,'_northPoints.mat'),'northPoints');     % save files on disk
+    
+end

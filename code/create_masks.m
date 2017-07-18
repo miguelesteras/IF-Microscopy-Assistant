@@ -33,6 +33,7 @@ for k = 1:num_files
     save(strcat(name,'_movie.mat'),'movie');               % save movie to disk as matlab variable 
     
     metadata = struct('name',name,...       % record experiment metadata
+                    'imageSize', [],...
                     'minCellArea', [],...    
                     'maxCellArea', [],...
                     'cellMedian', [],...
@@ -67,9 +68,10 @@ for k = 1:num_files
         se = strel('disk',5);
         red = imopen(imfill(red,'holes'), se);     % fill holes and morphological opening
         
-        nucleus = bwconncomp(red);  % detect connected components
+        nucleus = bwconncomp(red);              % detect connected components
         red_channel{i} = red;       
         nucleus_count{i} = cellfun('length',nucleus.PixelIdxList);
+
     end
     
     nucAreas = cell2mat(nucleus_count');
@@ -79,7 +81,8 @@ for k = 1:num_files
     maxNucArea = nucAreas(end);               % set max area of nucleus (optional)
     nucleusMedian = median(nucAreas(3*idx:end));
     %histogram(nucAreas)
-    metadata.minNucArea = minNucArea;       % add info to metadata file
+    metadata.imageSize = nucleus.ImageSize; % add info to metadata file
+    metadata.minNucArea = minNucArea;    
     metadata.maxNucArea = maxNucArea;
     metadata.nucleusMedian = nucleusMedian;
     
