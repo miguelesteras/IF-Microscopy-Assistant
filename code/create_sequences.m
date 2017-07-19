@@ -57,9 +57,18 @@ for i = 1:num_files
             end
         end
     end
-        binarymap = ~cellfun(@isempty,cellSequences);
-        figure; imshow(binarymap);                      % show binary map of sequences
-        seqLength = sum(uint8(binarymap),2);
-        figure; histogram(seqLength)                    % show frequency histogram of sequences
-        save(strcat(metadata.name,'_cellSequences.mat'),'cellSequences');   % save file on disk
+    binarymap = ~cellfun(@isempty,cellSequences);
+    figure; imshow(binarymap);                      % show binary map of sequences
+    seqLength = sum(uint8(binarymap),2);
+    %figure; histogram(seqLength)                    % show frequency histogram of sequences
+    numSeq = size(seqLength(seqLength > 4),1);      % number of unique sequences > 4 frames
+    trainSize = sum(seqLength(seqLength > 4)-4);    % total number of 5 frames sequences
+
+    [metadata(:).uniqueSequences] = numSeq;     % add info to metadata file
+    [metadata(:).trainingSize] = trainSize;
+
+    save(strcat(metadata.name,'_cellSequences.mat'),'cellSequences');   % save files on disk
+    save(strcat(metadata.name,'_metadata.mat'),'metadata');
+
+    clearvars -except files num_files k
 end
