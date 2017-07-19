@@ -1,12 +1,13 @@
-%% Phase 3. Create Orientation (North point)
+%% Phase 4.1. Transform cell silhouettes into Fourier descriptors
 %   ======================================================================
 %   Code by Miguel Esteras-Bejar, 07/2017
 %   This code is part of the project:
 %   'Tracking of temporally occluded or overlapping structures in live cell
 %   microscopy'
 %   This codes aims to:
-%   1. Determine the orientation of each cell based on the distance between
-%   contour pixels and center of mass. 
+%   1. Extract sequences of frames (f1, f2, ... , fx), from which
+%   input sequence = (f1, f2, ... , fx-1), and target sequence = fx
+%   2. Transform cell silhouette into Fourier descriptors.
 %   ======================================================================
 
 %% Build data set of single cells
