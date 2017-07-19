@@ -74,10 +74,9 @@ for k = 1:num_files
 
     end
     
-    nucAreas = cell2mat(nucleus_count');
-    nucAreas = sort(nucAreas);        % sort nucleus area values 
+    nucAreas = sort(cell2mat(nucleus_count'));  % sort nucleus area values 
     idx = round(size(nucAreas,2)/10);
-    minNucArea = nucAreas(3*idx);             % set min area of nucleus 
+    minNucArea = nucAreas(2*idx);             % set min area of nucleus (20% smallest removed) 
     maxNucArea = nucAreas(end);               % set max area of nucleus (optional)
     nucleusMedian = median(nucAreas(3*idx:end));
     %histogram(nucAreas)
@@ -118,7 +117,7 @@ for k = 1:num_files
             'ForegroundPolarity','bright',...
             'Sensitivity',0.2); 
         
-        se = strel('disk',5);
+        se = strel('disk',4);
         green = imopen(imfill(green,'holes'), se);      % fill holes and morphological opening
         [r, c] = find(nucleusMask{m}==1);               % list of coordenates of nucleus pixels
         selection = bwselect(green,c,r,8);              % cellmask regions overlapping with nucleus
@@ -164,15 +163,14 @@ for k = 1:num_files
     
     %% average cell size
 
-    cellAreas = cell2mat(singleCellArea');
-    cellAreas = sort(cellAreas);         
+    cellAreas = sort(cell2mat(singleCellArea'));         
     idx = round(size(cellAreas,2)/10);
     cellAreas = cellAreas(idx:end-idx);     % remove 10% smallest and biggest
-    [N,edges] = histcounts(cellAreas,6);    % put areas in 6 bins
-    [~,id] = max(N(4:6));                   % select mode bin
-    minCellArea = edges(2+id);              % set min area as the edge of one bin smaller than the mode bin 
+    [N,edges] = histcounts(cellAreas,8);    % put areas in 6 bins
+    [~,id] = max(N(5:8));                   % select mode bin from half biggest
+    minCellArea = edges(2+id);              % set min area as the edge of two bins smaller than the mode bin 
     maxCellArea = cellAreas(end);           % set max area of nucleus
-    cellMedian = median(cellAreas(sum(N(1:1+id)):end));
+    cellMedian = median(cellAreas(sum(N(1:1+id))+1:end));
     %histogram(cellAreas)
     metadata.minCellArea = minCellArea;
     metadata.maxCellArea = maxCellArea;
@@ -181,23 +179,8 @@ for k = 1:num_files
                   
     save(strcat(metadata.name,'_metadata.mat'),'metadata');     % save metadata file on disk
     
+    clearvars -except files num_files k
+    
 end
 
 clear; clc;
-
-%% Build data set of single cells
-
-files = dir('*_metadata.mat');      
-num_files = length(files);
-for i = 1:num_files
-    load(files(i).name,'metadata');
-    load(strcat(metadata.name,'_singleCellMask.mat'),'singleCellMask');
-
-    for j = 1:size(singleCellMask,1)
-        
-    
-    end
-
-    
-
-end
