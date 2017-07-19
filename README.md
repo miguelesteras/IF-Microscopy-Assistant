@@ -11,8 +11,8 @@ Output: cell array of rgb images or video frames (uint8), binary mask of single 
 Inputs: cell array of rgb images or video frames (uint8) and binary mask of single cells. <br>
 Outputs: cell array [s x f] containg the Pixel Idx List of cell sequences. s = no. unique sequences, f = no. video frames.<br><br>
 -> create_northPoint.m  (MATLAB R2017a) <br>
-Inputs:  .<br>
-Outputs:   .<br><br><br><br>
+Inputs: cell array containg the Pixel Idx List of cell sequences, binary mask of single cells.<br>
+Outputs: array containing the cell contour pixel further away from the center of mass.<br><br><br><br>
 **Reference**
 <br>
 This code is part of the project: <br>
