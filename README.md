@@ -9,8 +9,10 @@ Inputs: a .tiff file containing a set of rgb images in which [red channel = nucl
 Output: cell array of rgb images or video frames (uint8), binary mask of single cells, binary mask of cell clusters and binary mask of nucleus. <br><br>
 -> create_sequences.m  (MATLAB R2017a) <br>
 Inputs: cell array of rgb images or video frames (uint8) and binary mask of single cells. <br>
-Outputs: cell array [s x f] containg the Pixel Idx List of cell sequences. s = no. unique sequences, f = no. video frames. 
-<br><br><br><br>
+Outputs: cell array [s x f] containg the Pixel Idx List of cell sequences. s = no. unique sequences, f = no. video frames.<br><br>
+-> create_northPoint.m  (MATLAB R2017a) <br>
+Inputs:  .<br>
+Outputs:   .<br><br><br><br>
 **Reference**
 <br>
 This code is part of the project: <br>
