@@ -15,8 +15,7 @@ Inputs: cell array containg the Pixel Idx List of cell sequences, binary mask of
 Outputs: array containing the cell contour pixel further away from the center of mass.<br><br>
 -> transform_fourierDescriptors.m  (MATLAB R2017a) <br>
 Input: cell array containg the Pixel Idx List of cell sequences, binary mask of single cells, northPoint pixel for every single cell detected.<br>
-Outputs: array of fourrier vectors rerpesenting training instances, each of them containing  
-
+Outputs: training instances, each of them represented by a sequence of fourier vectors (v1, v2, ... , vx), from which input vectors = (v1, v2, ... , vx-1), and target vector = vx.
 <br><br><br><br>
 **Reference**
 <br>
