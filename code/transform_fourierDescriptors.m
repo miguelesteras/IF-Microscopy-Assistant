@@ -12,23 +12,39 @@
 
 %% Build data set of single cells
 
+% Number of frames in learning sequence (4 input + 1 target)
+seqLength = 5;
+
 files = dir('*_metadata.mat');      
 num_files = length(files);
 for i = 1:num_files
-    load(files(i).name,'metadata');                                     % load files from disk
+    load(files(i).name,'metadata');                                  
     load(strcat(metadata.name,'_cellSequences.mat'),'cellSequences');   
     load(strcat(metadata.name,'_singleCellMask.mat'),'singleCellMask');
     load(strcat(metadata.name,'_northPoints.mat'),'northPoints');
-
-    index = find(~cellfun(@isempty,cellSequences)); % non empty cells in cell sequences array
     
+    % detect sequence of length equal or greater than seqLength
+    noFrames = sum(double(~cellfun(@isempty,cellSequences)),2);
+    idx = find(noFrames >= seqLength);
     
-    
-    for j = 1:size(index)
-        
+    for j = 1:size(idx,1)
+        idx2 = find(~cellfun(@isempty,cellSequences(idx(j),:)));
+        for k = 1:size(idx2,2) - (seqLength-1)
+            frameOne = cellSequences(idx(j),idx(k));
+            
+        end
         
         
     end
+    
+    
+
+    
+    
+    index = find(~cellfun(@isempty,cellSequences));
+    
+           
+        
     
     
     clearvars -except files num_files k
