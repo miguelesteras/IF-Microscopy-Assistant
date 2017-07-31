@@ -10,9 +10,9 @@ Output: cell array of rgb images or video frames (uint8), binary mask of single 
 -> create_sequences.m  (MATLAB R2017a) <br>
 Inputs: cell array of rgb images or video frames (uint8) and binary mask of single cells. <br>
 Outputs: cell array [s x f] containg the Pixel Idx List of cell sequences. s = no. unique sequences, f = no. video frames.<br><br>
--> create_northPoint.m  (MATLAB R2017a) <br>
+-> radius_and_rotation.m  (MATLAB R2017a) <br>
 Inputs: cell array containg the Pixel Idx List of cell sequences, binary mask of single cells.<br>
-Outputs: array containing the cell contour pixel further away from the center of mass.<br><br>
+Outputs: array containing center of mass, array containing coordenate (polar) of contour pixel further away from center of mass, array containing rotation angle needed to point cell up (for each cell in cell sequences).<br><br>
 -> transform_fourierDescriptors.m  (MATLAB R2017a) <br>
 Input: cell array containg the Pixel Idx List of cell sequences, binary mask of single cells, northPoint pixel for every single cell detected.<br>
 Outputs: training instances, each of them represented by a sequence of fourier vectors (v1, v2, ... , vx), from which input vectors = (v1, v2, ... , vx-1), and target vector = vx.
