@@ -21,7 +21,8 @@ for i = 1:num_files
     load(files(i).name,'metadata');                                  
     load(strcat(metadata.name,'_cellSequences.mat'),'cellSequences');   
     load(strcat(metadata.name,'_singleCellMask.mat'),'singleCellMask');
-    load(strcat(metadata.name,'_northPoints.mat'),'northPoints');
+    load(strcat(metadata.name,'_rotationUp.mat'),'rotationUp');
+    
     
     % detect sequence of length equal or greater than seqLength
     noFrames = sum(double(~cellfun(@isempty,cellSequences)),2);
@@ -31,6 +32,7 @@ for i = 1:num_files
         idx2 = find(~cellfun(@isempty,cellSequences(idx(j),:)));
         for k = 1:size(idx2,2) - (seqLength-1)
             frameOne = cellSequences(idx(j),idx(k));
+            
             
         end
         
