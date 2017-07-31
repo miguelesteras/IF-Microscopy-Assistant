@@ -14,7 +14,7 @@ Outputs: cell array [s x f] containg the Pixel Idx List of cell sequences. s = n
 Inputs: cell array containg the Pixel Idx List of cell sequences, binary mask of single cells.<br>
 Outputs: array containing center of mass, array containing coordenate (polar) of contour pixel further away from center of mass, array containing rotation angle needed to point cell up (for each cell in cell sequences).<br><br>
 -> transform_fourierDescriptors.m  (MATLAB R2017a) <br>
-Input: cell array containg the Pixel Idx List of cell sequences, binary mask of single cells, northPoint pixel for every single cell detected.<br>
+Input: cell array containg the Pixel Idx List of cell sequences, binary mask of single cells, and arrays from radius_and_rotation.m script.<br>
 Outputs: training instances, each of them represented by a sequence of fourier vectors (v1, v2, ... , vx), from which input vectors = (v1, v2, ... , vx-1), and target vector = vx.
 <br><br><br><br>
 **Reference**
