@@ -68,5 +68,5 @@ for i = 1:num_files
     save(strcat(metadata.name,'_fourierInput.mat'),'fourierInput');     
     save(strcat(metadata.name,'_fourierTarget.mat'),'fourierTarget');     
 
-    %clearvars -except files num_files k
+    clearvars -except files num_files k
 end

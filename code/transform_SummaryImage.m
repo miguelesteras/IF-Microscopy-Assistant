@@ -1,4 +1,4 @@
-%% Phase 4.1. Transform cell silhouettes into Fourier descriptors
+%% Phase 4.2. Transform cell silhouettes into Dynamic images
 %   ======================================================================
 %   Code by Miguel Esteras-Bejar, 07/2017
 %   This code is part of the project:
@@ -7,14 +7,9 @@
 %   This codes aims to:
 %   1. Extract sequences of frames (f1, f2, ... , fx), from which
 %   input sequence = (f1, f2, ... , fx-1), and target sequence = fx
-%   2. Transform cell silhouette into Fourier descriptors.
-%   Fourier descriptors as first described by Kuhl and Giardina in 
-%   "Elliptic Fourier features of a closed contour" 
-%   Computer Graphics and Image Processing 18:236-258 1982
-%   This implementation has been created by David Thomas from the 
-%   University of Melbourne, and can be found at:
-%   https://uk.mathworks.com/matlabcentral/fileexchange/12746-elliptical-fourier-shape-descriptors
-%   Copyright (c) 2005, David Thomas
+%   2. Transform cell silhouettes of input sequence into a single gray scale 
+%   image (summary of all input images).
+%
 %   ======================================================================
 
 %% Build data set of single cells
@@ -43,32 +38,30 @@ for i = 1:num_files
     for j = 1:size(idx,1)
         idx2 = find(~cellfun(@isempty,cellSequences(idx(j),:)));
         for k = 1:size(idx2,2) - (seqLength-1)
-                            rotation = rotationUp{idx(j),idx2(k)};
-
-            while m < seqLength
+            rotation = rotationUp{idx(j),idx2(k)};
+            m = 1;
             
-            for m = 1:seqLength
-                if m < seqLength
-                    input = contourCoordenates{idx(j),idx2(k+m-1)};
-                    input(:,1) = input(:,1) + rotation;          % apply rotation
-                    [x,y] = pol2cart(input(:,1),input(:,2));
-                    contour = [x y];         
-                    descriptor = fEfourier(contour, NoHarmonics, NormSize, NormOrientation);
-                    fourierInput{count,m} = descriptor;
-                else
-                    target = contourCoordenates{idx(j),idx2(k+m-1)};
-                    target(:,1) = target(:,1) + rotation;          % apply rotation
-                    [x,y] = pol2cart(target(:,1),target(:,2));
-                    contour = [x y];         
-                    descriptor = fEfourier(contour, NoHarmonics, NormSize, NormOrientation);
-                    fourierTarget{count,1} = descriptor;
-                end
-                count = count+1;
-            end
+            while m < seqLength                
+                input = contourCoordenates{idx(j),idx2(k+m-1)};
+                input(:,1) = input(:,1) + rotation;          % apply rotation
+                [x,y] = pol2cart(input(:,1),input(:,2));
+                contour = [x y];         
+                descriptor = fEfourier(contour, NoHarmonics, NormSize, NormOrientation);
+                fourierInput{count,m} = descriptor;
+                m = m+1;
+            end        
+
+            target = contourCoordenates{idx(j),idx2(k+m-1)};
+            target(:,1) = target(:,1) + rotation;          % apply rotation
+            [x,y] = pol2cart(target(:,1),target(:,2));
+            contour = [x y];         
+            descriptor = fEfourier(contour, NoHarmonics, NormSize, NormOrientation);
+            fourierTarget{count,1} = descriptor;
+            count = count+1;
         end               
     end
     save(strcat(metadata.name,'_fourierInput.mat'),'fourierInput');     
     save(strcat(metadata.name,'_fourierTarget.mat'),'fourierTarget');     
 
-    %clearvars -except files num_files k
+    clearvars -except files num_files k
 end
