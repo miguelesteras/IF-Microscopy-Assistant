@@ -1,4 +1,4 @@
-%% Phase 3. Create Orientation (North point)
+%% Phase 3. Create Orientation
 %   ======================================================================
 %   Code by Miguel Esteras-Bejar, 07/2017
 %   This code is part of the project:
@@ -22,6 +22,7 @@ for i = 1:num_files
     centerMass = cell(size(cellSequences));
     maxRadii = cell(size(cellSequences));
     rotationUp = cell(size(cellSequences));
+    contourCoordenates = cell(size(cellSequences));
 
     for j = 1:size(index)
         selection = cellSequences{index(j)};    % select one cell
@@ -29,24 +30,29 @@ for i = 1:num_files
         image(selection) = true;                % only show selected cell in binary image
         stats = regionprops(image,'centroid');
         center = round(stats.Centroid);         % coordenates for center of mass
-        SE = strel('disk',5);
+        SE = strel('disk',2);
         contour = bwmorph(imopen(image,SE),'remove');       
         stats = regionprops(contour,'PixelList');
-        carteCoordenates = stats.PixelList - center;   % polar coordenates of cell contour (with origin in centroid)
-        [theta, rho] = cart2pol(carteCoordenates(:,1),carteCoordenates(:,2));
-        [radius, idx] = max(rho);
-        rotation = -rad2deg(theta(idx)) + 90;
+        carteCoordenates = stats.PixelList - center;        % cartesian coordenates of cell contour (with origin in centroid)
+        contourCoordenates{index(j)} = carteCoordenates;
+        [theta, rho] = cart2pol(carteCoordenates(:,1),carteCoordenates(:,2));   % polar coordenates
+        [~, idx] = max(rho);
+        rotation = pi/2 - theta(idx);
         centerMass{index(j)} = center;
-        maxRadii{index(j)} = [theta(idx) radius];
-        rotationUp{index(j)} = rotation;        
-               
+        maxRadii{index(j)} = [theta(idx) rho(idx)];
+        rotationUp{index(j)} = rotation;
+        contourCoordenates{index(j)} = [theta rho]; % polar coordenates
+
     end
     
-    a = maxRadii{1,2};
-    
-    save(strcat(metadata.name,'_centerMass.mat'),'centerMass');     % save files on disk
-    save(strcat(metadata.name,'_maxRadii.mat'),'maxRadii');     % save files on disk
-    save(strcat(metadata.name,'_rotationUp.mat'),'rotationUp');     % save files on disk
+    maxRadious = ceil(max(cellfun(@(v) v(2), maxRadii(index))));    
+    [metadata(:).maxRadioius] = maxRadious;
 
-    clearvars -except files num_files k
+    save(strcat(metadata.name,'_metadata.mat'),'metadata');
+    save(strcat(metadata.name,'_centerMass.mat'),'centerMass');     
+    save(strcat(metadata.name,'_maxRadii.mat'),'maxRadii');     
+    save(strcat(metadata.name,'_rotationUp.mat'),'rotationUp');     
+    save(strcat(metadata.name,'_contourCoordenates.mat'),'contourCoordenates');     
+
+    %clearvars -except files num_files k
 end
