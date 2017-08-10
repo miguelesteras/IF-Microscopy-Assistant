@@ -88,5 +88,5 @@ for i = 1:num_files
     save(strcat(metadata.name,'_dynamicTarget.mat'),'dynamicTarget');     
     save(strcat(metadata.name,'_cellCoordenates.mat'),'cellCoordenates');     
 
-    %clearvars -except files num_files k
+    clearvars -except files num_files k
 end
