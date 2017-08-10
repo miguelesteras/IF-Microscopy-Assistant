@@ -50,7 +50,7 @@ for i = 1:num_files
                 input = contourCoordenates{idx(j),idx2(k+m-1)};
                 input(:,1) = input(:,1) + rotation;          % apply rotation
                 [x,y] = pol2cart(input(:,1),input(:,2));
-                contour = [x y];         
+                contour = [round(x) round(y)];         
                 descriptor = fEfourier(contour, NoHarmonics, NormSize, NormOrientation);
                 fourierInput{count,m} = descriptor;
                 m = m+1;
@@ -59,7 +59,7 @@ for i = 1:num_files
             target = contourCoordenates{idx(j),idx2(k+m-1)};
             target(:,1) = target(:,1) + rotation;          % apply rotation
             [x,y] = pol2cart(target(:,1),target(:,2));
-            contour = [x y];         
+            contour = [round(x) round(y)];         
             descriptor = fEfourier(contour, NoHarmonics, NormSize, NormOrientation);
             fourierTarget{count,1} = descriptor;
             count = count+1;
@@ -68,5 +68,5 @@ for i = 1:num_files
     save(strcat(metadata.name,'_fourierInput.mat'),'fourierInput');     
     save(strcat(metadata.name,'_fourierTarget.mat'),'fourierTarget');     
 
-    clearvars -except files num_files k
+    %clearvars -except files num_files k
 end

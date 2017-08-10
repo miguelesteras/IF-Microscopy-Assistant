@@ -32,7 +32,7 @@ for i = 1:num_files
         center = round(stats.Centroid);         % coordenates for center of mass
         SE = strel('disk',2);
         contour = bwmorph(imopen(image,SE),'remove');       
-        stats = regionprops(contour,'PixelList');
+        stats = regionprops(contour,'PixelList');       
         carteCoordenates = stats.PixelList - center;        % cartesian coordenates of cell contour (with origin in centroid)
         contourCoordenates{index(j)} = carteCoordenates;
         [theta, rho] = cart2pol(carteCoordenates(:,1),carteCoordenates(:,2));   % polar coordenates
@@ -46,7 +46,7 @@ for i = 1:num_files
     end
     
     maxRadious = ceil(max(cellfun(@(v) v(2), maxRadii(index))));    
-    [metadata(:).maxRadioius] = maxRadious;
+    [metadata(:).maxRadious] = maxRadious;
 
     save(strcat(metadata.name,'_metadata.mat'),'metadata');
     save(strcat(metadata.name,'_centerMass.mat'),'centerMass');     

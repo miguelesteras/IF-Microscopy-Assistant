@@ -21,7 +21,9 @@ num_files = length(files);
 for i = 1:num_files
     load(files(i).name,'metadata');                                  
     load(strcat(metadata.name,'_cellSequences.mat'),'cellSequences');   
+    load(strcat(metadata.name,'_singleCellMask.mat'),'singleCellMask');
     load(strcat(metadata.name,'_rotationUp.mat'),'rotationUp');
+    load(strcat(metadata.name,'_contourCoordenates.mat'),'contourCoordenates');     
     load(strcat(metadata.name,'_centerMass.mat'),'centerMass');     
     
     cellCoordenates = cell(size(cellSequences));
@@ -63,11 +65,11 @@ for i = 1:num_files
                 cellIdx = sub2ind(size(canvas), rowSub, colSub);
                 canvas(cellIdx) = true;
                 SE = strel('disk',2);
-                contour = bwmorph(imopen(imfill(canvas,'holes'),SE),'remove');
+                contour = bwmorph(imopen(canvas,SE),'remove');
                 input(contour) = 50*m;
                 m = m+1;
             end
-            dynamicInput{count,1} = mat2gray(input);
+            dynamicInput{count,1} = input;
             target = int8(zeros((metadata.maxRadious*2)+1, (metadata.maxRadious*2)+1));
             canvas = false((metadata.maxRadious*2)+1, (metadata.maxRadious*2)+1);
             selection = cellCoordenates{idx(j),idx2(k+m-1)};
@@ -78,15 +80,14 @@ for i = 1:num_files
             cellIdx = sub2ind(size(canvas), rowSub, colSub);
             canvas(cellIdx) = true;
             SE = strel('disk',2);
-            contour = bwmorph(imopen(imfill(canvas,'holes'),SE),'remove');
+            contour = bwmorph(imopen(canvas,SE),'remove');
             target(contour) = 50*m;
-            dynamicTarget{count,1} = mat2gray(target);
+            dynamicTarget{count,1} = target;
             count = count+1;
         end               
     end
     save(strcat(metadata.name,'_dynamicInput.mat'),'dynamicInput');     
     save(strcat(metadata.name,'_dynamicTarget.mat'),'dynamicTarget');     
-    save(strcat(metadata.name,'_cellCoordenates.mat'),'cellCoordenates');     
 
-    %clearvars -except files num_files k
+    clearvars -except files num_files k
 end
