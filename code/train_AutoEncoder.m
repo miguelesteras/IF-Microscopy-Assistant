@@ -1,11 +1,12 @@
-%% Phase 5.1 Train a RNN (NARX)
+%% Phase 5.3 Train an AutoEncoder from Summary Image
 %   ======================================================================
 %   Code by Miguel Esteras-Bejar, 07/2017
 %   This code is part of the project:
 %   'Tracking of temporally occluded or overlapping structures in live cell
 %   microscopy'
 %   This codes aims to:
-%   1. Train a Recurrent Neural Network based on Fourier descriptors. 
+%   1. Train a AutoEncoder network for summary image input, followed by a 
+%   fully connected layer to form a output frame. 
 %   ======================================================================
 
 files = dir('*_metadata.mat');      

@@ -87,6 +87,21 @@ for i = 1:num_files
     save(strcat(metadata.name,'_dynamicInput.mat'),'dynamicInput');     
     save(strcat(metadata.name,'_dynamicTarget.mat'),'dynamicTarget');     
     save(strcat(metadata.name,'_cellCoordenates.mat'),'cellCoordenates');     
+    
+    clearvars -except files num_files i
+end
 
-    clearvars -except files num_files k
+
+
+load(files(1).name,'metadata');                               
+load(strcat(metadata.name,'_fourierInput.mat'),'fourierInput');     
+load(strcat(metadata.name,'_fourierTarget.mat'),'fourierTarget');
+timeSeries = [fourierInput fourierTarget];   
+
+for i = 2:num_files
+    load(files(i).name,'metadata');                               
+    load(strcat(metadata.name,'_fourierInput.mat'),'fourierInput');     
+    load(strcat(metadata.name,'_fourierTarget.mat'),'fourierTarget');
+    
+    timeSeries = [timeSeries; [fourierInput fourierTarget]];
 end
