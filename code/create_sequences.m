@@ -70,5 +70,5 @@ for i = 1:num_files
     save(strcat(metadata.name,'_cellSequences.mat'),'cellSequences');   % save files on disk
     save(strcat(metadata.name,'_metadata.mat'),'metadata');
 
-    clearvars -except files num_files k
+    clearvars -except files num_files i
 end

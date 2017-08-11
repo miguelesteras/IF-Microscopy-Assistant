@@ -54,5 +54,5 @@ for i = 1:num_files
     save(strcat(metadata.name,'_rotationUp.mat'),'rotationUp');     
     save(strcat(metadata.name,'_contourCoordenates.mat'),'contourCoordenates');     
 
-    clearvars -except files num_files k
+    clearvars -except files num_files i
 end
