@@ -33,7 +33,7 @@ radious = ceil(cellfun(@(v) v(2), maxRadii(index)));
 cropInput = cellfun(@(x) imcrop(x,[50 35 93 123]),inputData,...
     'UniformOutput',false);
 
-reduceTarget = cellfun(@(x) imresize(x,0.5),targetData,...
+reduceTarget = cellfun(@(x) imresize(imcrop(x,[50 35 93 123]),0.5),targetData,...
     'UniformOutput',false);
 
 %% Train a autoencoder for dynamic images: First layer
@@ -85,10 +85,25 @@ AE2features = encode(AE2,AE1features);
 
 %% Train a fully connected layer
 
-fullyCon = fullyConnectedLayer(
-DEEPnet = stack(autoenc1,autoenc2,softnet);
-DEEPnet.inputs{1}.size = 1024;
-view(DEEPnet)
+% transform input and output from cell array to column vectors
+X = cell2mat(cellfun(@(x) (reshape(x, 1, []))',cropInput,'UniformOutput',false));
+Y = cell2mat(cellfun(@(x) (reshape(x, 1, []))',reduceTarget,'UniformOutput',false));
+
+% train network stack
+FC = fullyConnectedLayer(2914);
+network = stack(AE1,AE2,FC);
+view(network)
+
+network.inputs{1}.size = 11656;
+network.trainFcn                = 'trainoss';   % One-step secant backpropagation
+network.trainParam.epochs       = 100;          % maximum number of epochs to train (for early stopping)
+network.trainParam.showWindow   = true;         % show training GUI
+network.trainParam.min_grad     = 1e-6;         % minimum performance gradient (for early stopping)
+network.trainParam.show         = 1;            % Epochs between displays
+network.divideParam.trainRatio = 0.9;            % all data used for training
+network.divideParam.valRatio = 0.1;            % all data used for training
+
+[trainNet, record] = train(network,X,Y);     % train network
 
 
 
