@@ -94,14 +94,14 @@ FC = fullyConnectedLayer(2914);
 network = stack(AE1,AE2,FC);
 view(network)
 
-network.inputs{1}.size = 11656;
+network.inputs{1}.size          = 11656;
 network.trainFcn                = 'trainoss';   % One-step secant backpropagation
 network.trainParam.epochs       = 100;          % maximum number of epochs to train (for early stopping)
 network.trainParam.showWindow   = true;         % show training GUI
 network.trainParam.min_grad     = 1e-6;         % minimum performance gradient (for early stopping)
 network.trainParam.show         = 1;            % Epochs between displays
-network.divideParam.trainRatio = 0.9;            % all data used for training
-network.divideParam.valRatio = 0.1;            % all data used for training
+network.divideParam.trainRatio  = 0.9;            % all data used for training
+network.divideParam.valRatio    = 0.1;            % all data used for training
 
 [trainNet, record] = train(network,X,Y);     % train network
 
