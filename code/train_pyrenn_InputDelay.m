@@ -31,25 +31,25 @@ dataSet = [inputData targetData];
 
 % Create network structure with delays in input only
 inputSiz    = 100;
-hidden1Siz  = 500;
-hidden2Siz  = 500;
+hidden1Siz  = 50;
+hidden2Siz  = 50;
 outputSiz   = 100;
-dIn         = [0,1,2,3];  % Set of input delays of the neural network
-dIntern     = [];  % Set of inernal delays of the neural network
-dOut        = [];  % Set of output delays of the neural network
+dIn         = [0,1];    % Set of input delays of the neural network
+dIntern     = [];           % Set of inernal delays of the neural network
+dOut        = [];           % Set of output delays of the neural network
 
 net = CreateNN([inputSiz hidden1Siz hidden2Siz outputSiz], dIn, dIntern, dOut);
 
 %% Train network with training data, one input at the time.
 repeat      = 2;    % training events with same input sequence
 terError    = 1e-5; % target prediction error to terminate
-epochs      = 500;  % number of epochs
+epochs      = 10;   % number of epochs
 
 for j = 1:epochs
     for k = 1:size(dataSet,1)
         X = cell2mat(dataSet(k,1:4));
         Y = cell2mat(dataSet(k,2:5));
-        net = train_LM(X,Y,net,repeat,terError);
+        net = train_BFGS(X,Y,net,repeat,terError);
     end    
 end
 
