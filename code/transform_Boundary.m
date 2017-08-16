@@ -24,20 +24,21 @@ for i = 1:num_files
     load(files(i).name,'metadata');                                  
     load(strcat(metadata.name,'_cellSequences.mat'),'cellSequences');   
     load(strcat(metadata.name,'_rotationUp.mat'),'rotationUp');
-    load(strcat(metadata.name,'_centerMass.mat'),'centerMass');     
+    load(strcat(metadata.name,'_centerMass.mat'),'centerMass');  
+    load(strcat(metadata.name,'_cellCoordenates.mat'),'cellCoordenates');     
     
-    cellCoordenates = cell(size(cellSequences));
-    index = find(~cellfun(@isempty,cellSequences)); % non empty cells in cell sequences array
-    for h = 1:size(index)    
-        selection = cellSequences{index(h)};
-        center = centerMass{index(h)};
-        image = false(metadata.imageSize);
-        image(selection) = true;                % only show selected cell in binary image
-        stats = regionprops(image,'PixelList');
-        coordenates = stats.PixelList - center;
-        [theta, rho] = cart2pol(coordenates(:,1),coordenates(:,2));   % polar coordenates
-        cellCoordenates{index(h)} = [theta rho]; 
-    end
+%     cellCoordenates = cell(size(cellSequences));
+%     index = find(~cellfun(@isempty,cellSequences)); % non empty cells in cell sequences array
+%     for h = 1:size(index)    
+%         selection = cellSequences{index(h)};
+%         center = centerMass{index(h)};
+%         image = false(metadata.imageSize);
+%         image(selection) = true;                % only show selected cell in binary image
+%         stats = regionprops(image,'PixelList');
+%         coordenates = stats.PixelList - center;
+%         [theta, rho] = cart2pol(coordenates(:,1),coordenates(:,2));   % polar coordenates
+%         cellCoordenates{index(h)} = [theta rho]; 
+%     end
 
     % detect sequence of length equal or greater than seqLength
     noFrames = sum(double(~cellfun(@isempty,cellCoordenates)),2);
@@ -57,7 +58,7 @@ for i = 1:num_files
                 selection = cellCoordenates{idx(j),idx2(k+m-1)};
                 selection(:,1) = selection(:,1) + rotation;
                 [x,y] = pol2cart(selection(:,1),selection(:,2));
-                cell = [round(x) round(y)];
+                mask = [round(x) round(y)];
                 
                 % Start of Binary Search algorithm implementation for
                 % values of the shrinking factor 's'. target size vecSize
@@ -66,7 +67,7 @@ for i = 1:num_files
                 from = 0; to = 1; 
                 for n = 1:5
                     s = (from + to)/2;
-                    sumInd = boundary(cell,s);
+                    sumInd = boundary(mask,s);
                     if numel(sumInd) == vecSize+1
                         break
                     elseif from == to
@@ -78,16 +79,54 @@ for i = 1:num_files
                     end
                 end
                 % End of Binary Search algorithm implementation
-                sumInd = boundary(cell,s);
+                sumInd = boundary(mask,s);
 
-                hull = cell(sumInd(1:end-1),:);    
+                hull = mask(sumInd(1:end-1),:);    
                 BoundaryDataSet{count,m} = hull;
             end           
             count = count+1;
         end               
     end
-    save(strcat(metadata.name,'_BoundaryDataSet.mat'),'BoundaryDataSet');     
-    save(strcat(metadata.name,'_cellCoordenates.mat'),'cellCoordenates');     
+    %%
+    % standarize feature vector size
+    BoundaryDataSetSt = cell(size(BoundaryDataSet));
+    for k = 1:numel(BoundaryDataSet)
+        set = BoundaryDataSet{k};
+        while size(set,1) ~= vecSize
+            % measure euclidean disance between 2 adjacent points and add a new 
+            % point between the points with max distance    
+            if size(set,1) < vecSize
+                v1 = set;
+                v2 = [set(2:end,:);set(1,:)];
+                distance = sqrt(sum((v1-v2).^2,2));
+                [~,idx3] = max(distance);
+                if idx3 == size(set,1)
+                    newPoint = (set(end,:)+set(1,:))./2;
+                    set = [set;newPoint];
+                else
+                    newPoint = (set(idx3,:)+set(idx3+1,:))./2;
+                    set = [set(1:idx3,:);newPoint;set(idx3+1:end,:)];
+                end
+            % measure euclidean disance between 3 adjacent points sequence and delete 
+            % the point in the middle of the shortest distance   
+            elseif size(set,1) > vecSize
+                v1 = set;
+                v2 = [set(3:end,:);set(1:2,:)];
+                distance = sqrt(sum((v1-v2).^2,2));
+                [~,idx3] = min(distance);
+                if idx3 == size(set,1)
+                    set(1,:) = [];
+                else
+                    set(idx3+1,:) = [];
+                end
+            end 
+        end
+        BoundaryDataSetSt{k} = set;
+    end
+    
+    save(strcat(metadata.name,'_BoundaryDataSet.mat'),'BoundaryDataSet');
+    save(strcat(metadata.name,'_BoundaryDataSetSt.mat'),'BoundaryDataSetSt');     
+%   save(strcat(metadata.name,'_cellCoordenates.mat'),'cellCoordenates');     
     
 %     clearvars -except files num_files i
 end
@@ -100,18 +139,19 @@ end
 % canvas = false(200,200);
 % canvas(ind) = true;
 % 
-ind2 = sub2ind([200,200], cell(:,2)+100, cell(:,1)+100);
-canvas2 = false(200,200);
-canvas2(ind2) = true;
+% ind2 = sub2ind([200,200], cell(:,2)+100, cell(:,1)+100);
+% canvas2 = false(200,200);
+% canvas2(ind2) = true;
 % 
 % imshowpair(canvas,canvas2,'montage');
 % 
-I = BoundaryDataSet{20,4};
-numel(I)
-ind = sub2ind([200,200], I(:,2)+100, I(:,1)+100);
-canvas = false(200,200);
-canvas(ind) = true;
-imshow(canvas)
+% figure
+% I = BoundaryDataSetSt{20,8};
+% numel(I)
+% ind = sub2ind([200,200], I(:,2)+100, I(:,1)+100);
+% canvas = false(200,200);
+% canvas(ind) = true;
+% imshow(canvas)
 
 % figure
 % indSu = sub2ind([193,193], summary(1:50,2), summary(1:50,1));
