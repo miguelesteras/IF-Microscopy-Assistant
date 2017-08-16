@@ -60,21 +60,23 @@ for i = 1:num_files
                 cell = [round(x) round(y)];
                 
                 % Start of Binary Search algorithm implementation for
-                % values of the shrinking factor 's'. target size = vecSize
+                % values of the shrinking factor 's'. target size vecSize
                 % + 1 because start and end value in boundary vector are
                 % the same (and will be removed).
-%                 from = 0; to = 1; 
-%                 while from < to
-%                     s = (from + to)/2;
-%                     sumInd = boundary(cell,s);
-%                     if numel(sumInd) == vecSize+1
-%                         break
-%                     elseif numel(sumInd) < vecSize+1
-%                         from = s;
-%                     elseif numel(sumInd) > vecSize+1
-%                         to = s;
-%                     end
-%                 end
+                from = 0; to = 1; 
+                for n = 1:5
+                    s = (from + to)/2;
+                    sumInd = boundary(cell,s);
+                    if numel(sumInd) == vecSize+1
+                        break
+                    elseif from == to
+                        break
+                    elseif numel(sumInd) < vecSize+1
+                        from = s;
+                    elseif numel(sumInd) > vecSize+1
+                        to = s;
+                    end
+                end
                 % End of Binary Search algorithm implementation
                 sumInd = boundary(cell,s);
 
