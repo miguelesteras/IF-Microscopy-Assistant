@@ -15,6 +15,7 @@
 %% Build data set of single cells
 
 seqLength = 8;              % Number of frames in learning sequence (x input + 1 target)
+vecSize   = 100;            % Boundary descriptor vector size
 
 files = dir('*_metadata.mat');      
 num_files = length(files);
@@ -56,9 +57,21 @@ for i = 1:num_files
                 selection(:,1) = selection(:,1) + rotation;          % apply rotation
                 [x,y] = pol2cart(selection(:,1),selection(:,2));
                 contour = [round(x) round(y)];
+                % Binary Search algorithm implementation
+                from = 0;
+                to = 1;
                 s = 0.5;
-                
                 sumInd = boundary(contour,s);
+                while numel(sumInd) ~= vecSize
+                    if numel(sumInd) < vecSize
+                        from = s;
+                        s = round((s + to)/2);                        
+                    elseif numel(sumInd) > vecSize 
+                        to = s;
+                        s = round((s + from)/2); 
+                    end
+                    sumInd = boundary(contour,s);
+                end
                 boundary = contour(sumInd(1:end-1),:);        % remove last value (because it is equal to first)
                 BoundaryDataSet{count,m} = boundary;
             end           

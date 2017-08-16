@@ -15,6 +15,7 @@
 %% Build data set of single cells
 
 seqLength = 8;              % Number of frames in learning sequence (x input + 1 target)
+vecSize   = 100;            % Boundary descriptor vector size
 
 files = dir('*_metadata.mat');      
 num_files = length(files);
@@ -51,33 +52,34 @@ for i = 1:num_files
         for k = 1:size(idx2,2) - (seqLength-1)
             rotation = rotationUp{idx(j),idx2(k)} + pi/2;   % +pi/2 added so rotation points west
             input = int8(zeros((metadata.maxRadious*2)+1, (metadata.maxRadious*2)+1));
-            m = 1;            
-            while m < seqLength                
+            for m = 1:seqLength                
                 selection = cellCoordenates{idx(j),idx2(k+m-1)};
                 selection(:,1) = selection(:,1) + rotation;          % apply rotation
                 [x,y] = pol2cart(selection(:,1),selection(:,2));
                 contour = [round(x) round(y)];
+                % Binary Search algorithm implementation
+                from = 0;
+                to = 1;
                 s = 0.5;
-                
                 sumInd = boundary(contour,s);
+                while numel(sumInd) ~= vecSize
+                    if numel(sumInd) < vecSize
+                        from = s;
+                        s = round((s + to)/2);                        
+                    elseif numel(sumInd) > vecSize 
+                        to = s;
+                        s = round((s + from)/2); 
+                    end
+                    sumInd = boundary(contour,s);
+                    
+                    
+                    
+                    
+                    
+                
                 boundary = contour(sumInd(1:end-1),:);        % remove last value (because it is equal to first)
-                BoundaryDataSet{count,m}
-                m = m+1;
-            end
-            dynamicInput{count,1} = mat2gray(input);
-            target = int8(zeros((metadata.maxRadious*2)+1, (metadata.maxRadious*2)+1));
-            canvas = false((metadata.maxRadious*2)+1, (metadata.maxRadious*2)+1);
-            selection = cellCoordenates{idx(j),idx2(k+m-1)};
-            selection(:,1) = selection(:,1) + rotation;          
-            [x,y] = pol2cart(selection(:,1),selection(:,2));
-            colSub = round(x)+metadata.maxRadious+1; 
-            rowSub = round(y)+metadata.maxRadious+1;
-            cellIdx = sub2ind(size(canvas), rowSub, colSub);
-            canvas(cellIdx) = true;
-            SE = strel('disk',2);
-            contour = bwmorph(imopen(imfill(canvas,'holes'),SE),'remove');
-            target(contour) = 25*m;
-            dynamicTarget{count,1} = mat2gray(target);
+                BoundaryDataSet{count,m} = boundary;
+            end           
             count = count+1;
         end               
     end
