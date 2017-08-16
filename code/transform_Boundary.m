@@ -16,6 +16,7 @@
 
 seqLength = 8;              % Number of frames in learning sequence (x input + 1 target)
 vecSize   = 100;            % Boundary descriptor vector size
+s = 0.8;
 
 files = dir('*_metadata.mat');      
 num_files = length(files);
@@ -53,25 +54,29 @@ for i = 1:num_files
                 selection = cellCoordenates{idx(j),idx2(k+m-1)};
                 selection(:,1) = selection(:,1) + rotation;          % apply rotation
                 [x,y] = pol2cart(selection(:,1),selection(:,2));
-                cell = [round(x) round(y)];
+                %cell = [round(x)+100 round(y)+100];
                 
                 % Start of Binary Search algorithm implementation for
-                % values of the shrinking factor 's'
-                from = 0; to = 1; s = 0.5;
-                sumInd = boundary(cell,s);
-                while numel(sumInd) ~= vecSize
-                    if numel(sumInd) < vecSize
-                        from = s;
-                        s = (s + to)/2;                        
-                    elseif numel(sumInd) > vecSize 
-                        to = s;
-                        s = (s + from)/2; 
-                    end
-                    sumInd = boundary(cell,s);
-                end
-                
-                boundary = cell(sumInd(1:end-1),:);        % remove last value (because it is equal to first)
-                BoundaryDataSet{count,m} = boundary;
+                % values of the shrinking factor 's'. target size = vecSize
+                % + 1 because start and end value in boundary vector are
+                % the same (and will be removed).
+%                 from = 0; to = 1; 
+%                 while from <= to
+%                     s = (from + to)/2;
+%                     sumInd = boundary(cell,s);
+%                     if numel(sumInd) == vecSize+1
+%                         break
+%                     elseif numel(sumInd) < vecSize+1
+%                         from = s;
+%                     elseif numel(sumInd) > vecSize+1
+%                         to = s;
+%                     end
+%                 end
+                % End of Binary Search algorithm implementation
+                sumInd = boundary(round(x),round(y),s);
+
+                hull = cell(sumInd(1:end-1),:);    
+                BoundaryDataSet{count,m} = hull;
             end           
             count = count+1;
         end               
@@ -84,18 +89,25 @@ end
 
 %%
 
-figure
-
-ind = sub2ind([200,200], contour(:,2)+100, contour(:,1)+100);
+% figure
+% 
+% ind = sub2ind([200,200], contour(:,2)+100, contour(:,1)+100);
+% canvas = false(200,200);
+% canvas(ind) = true;
+% 
+% ind2 = sub2ind([200,200], cell(:,2)+100, cell(:,1)+100);
+% canvas2 = false(200,200);
+% canvas2(ind2) = true;
+% 
+% imshowpair(canvas,canvas2,'montage');
+% 
+I = BoundaryDataSet{20,4};
+numel(I)
+ind = sub2ind([200,200], I(:,2)+100, I(:,1)+100);
 canvas = false(200,200);
 canvas(ind) = true;
+imshow(canvas)
 
-ind2 = sub2ind([200,200], cell(:,2)+100, cell(:,1)+100);
-canvas2 = false(200,200);
-canvas2(ind2) = true;
-
-imshowpair(canvas,canvas2,'montage');
-% 
 % figure
 % indSu = sub2ind([193,193], summary(1:50,2), summary(1:50,1));
 % canvasSu = false(193,193);
