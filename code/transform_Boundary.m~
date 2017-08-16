@@ -48,11 +48,11 @@ for i = 1:num_files
     for j = 1:size(idx,1)
         idx2 = find(~cellfun(@isempty,cellCoordenates(idx(j),:)));
         for k = 1:size(idx2,2) - (seqLength-1)
-            rotation = rotationUp{idx(j),idx2(k)} - pi/2;   % -pi/2 added so rotation points west
-            input = int8(zeros((metadata.maxRadious*2)+1, (metadata.maxRadious*2)+1));
+            % the rotation applied makes further pixel fro
+            rotation = rotationUp{idx(j),idx2(k)} - pi/2;   % -pi/2 so further point looks west
             for m = 1:seqLength                
                 selection = cellCoordenates{idx(j),idx2(k+m-1)};
-                selection(:,1) = selection(:,1) + rotation;          % apply rotation
+                selection(:,1) = selection(:,1) + rotation;
                 [x,y] = pol2cart(selection(:,1),selection(:,2));
                 cell = [round(x) round(y)];
                 
@@ -61,7 +61,7 @@ for i = 1:num_files
                 % + 1 because start and end value in boundary vector are
                 % the same (and will be removed).
 %                 from = 0; to = 1; 
-%                 while from <= to
+%                 while from < to
 %                     s = (from + to)/2;
 %                     sumInd = boundary(cell,s);
 %                     if numel(sumInd) == vecSize+1
@@ -75,8 +75,8 @@ for i = 1:num_files
                 % End of Binary Search algorithm implementation
                 sumInd = boundary(cell,s);
 
-                boundary = cell(sumInd(1:end-1),:);    
-                BoundaryDataSet{count,m} = boundary;
+                hull = cell(sumInd(1:end-1),:);    
+                BoundaryDataSet{count,m} = hull;
             end           
             count = count+1;
         end               
@@ -95,9 +95,9 @@ end
 % canvas = false(200,200);
 % canvas(ind) = true;
 % 
-% ind2 = sub2ind([200,200], cell(:,2)+100, cell(:,1)+100);
-% canvas2 = false(200,200);
-% canvas2(ind2) = true;
+ind2 = sub2ind([200,200], cell(:,2)+100, cell(:,1)+100);
+canvas2 = false(200,200);
+canvas2(ind2) = true;
 % 
 % imshowpair(canvas,canvas2,'montage');
 % 
