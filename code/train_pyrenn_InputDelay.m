@@ -31,14 +31,14 @@ dataSet = [inputData targetData];
 
 % Create network structure with delays in input only
 inputSiz    = 100;
-hidden1Siz  = 50;
-hidden2Siz  = 50;
+hidden1Siz  = 20;
+hidden2Siz  = 20;
 outputSiz   = 100;
 dIn         = [0,1];    % Set of input delays of the neural network
 dIntern     = [];           % Set of inernal delays of the neural network
 dOut        = [];           % Set of output delays of the neural network
 
-net = CreateNN([inputSiz hidden1Siz hidden2Siz outputSiz], dIn, dIntern, dOut);
+net = CreateNN([inputSiz hidden1Siz outputSiz], dIn, dIntern, dOut);
 
 %% Train network with training data, one input at the time.
 repeat      = 2;    % training events with same input sequence
@@ -53,9 +53,14 @@ for j = 1:epochs
     end    
 end
 
-%% Validate
-yHat = NNOut(X,net);
+save('net_pyrenn_inputDelay.mat','net');     
 
+%% Validate
+pred = NNOut(X,net);
+yHat = reshape(pred(:,end)', [25, 4])';
+y = reshape(Y(:,end)', [25, 4])';
+contourHat = rEfourier(yHat, 25, 200);
+contour = rEfourier(y, 25, 200);
 
 
 

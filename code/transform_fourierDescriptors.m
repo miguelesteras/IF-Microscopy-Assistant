@@ -61,6 +61,7 @@ for i = 1:num_files
             [x,y] = pol2cart(target(:,1),target(:,2));
             contour = [round(x) round(y)];         
             descriptor = fEfourier(contour, NoHarmonics, NormSize, NormOrientation);
+            reconstruction = rEfourier(descriptor, NoHarmonics, 186);
             fourierTarget{count,1} = descriptor;
             count = count+1;
         end               

@@ -1,4 +1,4 @@
-%% Phase 4.2. Transform cell silhouettes into Dynamic images
+%% Phase 4.3. Transform cell masks into a conforming 2-D boundary
 %   ======================================================================
 %   Code by Miguel Esteras-Bejar, 07/2017
 %   This code is part of the project:
@@ -7,14 +7,14 @@
 %   This codes aims to:
 %   1. Extract sequences of frames (f1, f2, ... , fx), from which
 %   input sequence = (f1, f2, ... , fx-1), and target sequence = fx
-%   2. Transform cell silhouettes of input sequence into a single gray scale 
-%   image (summary of all input images).
-%
+%   2. Transform cell masks into a conforming 2-D boundary of fix size
+%   given by (x,y) coordenates. The boundary can shrink towards the 
+%   interior of the hull. 
 %   ======================================================================
 
 %% Build data set of single cells
 
-seqLength = 10;              % Number of frames in learning sequence (4 input + 1 target)
+seqLength = 8;              % Number of frames in learning sequence (x input + 1 target)
 
 files = dir('*_metadata.mat');      
 num_files = length(files);
@@ -40,8 +40,7 @@ for i = 1:num_files
     % detect sequence of length equal or greater than seqLength
     noFrames = sum(double(~cellfun(@isempty,cellCoordenates)),2);
     idx = find(noFrames >= seqLength);
-    dynamicInput = cell(100,1); 
-    dynamicTarget = cell(100,1);
+    BoundaryDataSet = cell(100,seqLength); 
     count = 1;
     
     % the black canvas where to draw the dynamic image has dimensions given
@@ -50,21 +49,19 @@ for i = 1:num_files
     for j = 1:size(idx,1)
         idx2 = find(~cellfun(@isempty,cellCoordenates(idx(j),:)));
         for k = 1:size(idx2,2) - (seqLength-1)
-            rotation = rotationUp{idx(j),idx2(k)};
+            rotation = rotationUp{idx(j),idx2(k)} + pi/2;   % +pi/2 added so rotation points west
             input = int8(zeros((metadata.maxRadious*2)+1, (metadata.maxRadious*2)+1));
             m = 1;            
             while m < seqLength                
-                canvas = false((metadata.maxRadious*2)+1, (metadata.maxRadious*2)+1);
                 selection = cellCoordenates{idx(j),idx2(k+m-1)};
                 selection(:,1) = selection(:,1) + rotation;          % apply rotation
                 [x,y] = pol2cart(selection(:,1),selection(:,2));
-                colSub = round(x)+metadata.maxRadious+1; 
-                rowSub = round(y)+metadata.maxRadious+1;
-                cellIdx = sub2ind(size(canvas), rowSub, colSub);
-                canvas(cellIdx) = true;
-                SE = strel('disk',2);
-                contour = bwmorph(imopen(imfill(canvas,'holes'),SE),'remove');
-                input(contour) = 15*m;
+                contour = [round(x) round(y)];
+                s = 0.5;
+                
+                sumInd = boundary(contour,s);
+                boundary = contour(sumInd(1:end-1),:);        % remove last value (because it is equal to first)
+                BoundaryDataSet{count,m}
                 m = m+1;
             end
             dynamicInput{count,1} = mat2gray(input);
@@ -84,27 +81,34 @@ for i = 1:num_files
             count = count+1;
         end               
     end
-    save(strcat(metadata.name,'_dynamicInput.mat'),'dynamicInput');     
-    save(strcat(metadata.name,'_dynamicTarget.mat'),'dynamicTarget');     
+    save(strcat(metadata.name,'_BoundaryDataSet.mat'),'BoundaryDataSet');     
     save(strcat(metadata.name,'_cellCoordenates.mat'),'cellCoordenates');     
     
 %     clearvars -except files num_files i
 end
 
-%% Plots
+%%
 
-% canvas = cat(3, dynamicInput{1}, dynamicInput{1}, dynamicInput{1});
-% canvas(:,:,1) = canvas(:,:,1) + dynamicTarget{1};
-% canvas(:,:,2) = canvas(:,:,2) - dynamicTarget{1};
-% canvas(:,:,3) = canvas(:,:,3) - dynamicTarget{1};
-% imshow(canvas)
+I = imrotate(imfill(dynamicTarget{1}),90);  % further way point from center faced west, so pixel boundary starts from it and follows clockwise
+%I = imfill(dynamicTarget{1});
+stats = regionprops(I,'PixelList');
+c = stats.PixelList;
+no = numel(c);
+k = boundary(c,0.7);
+summary = c(k(1:end-1),:); % remove last value (because it is equal to first)
 
-%% Transform into gradients
+figure
+ind = sub2ind([193,193], c(:,2), c(:,1));
+canvas = false(193,193);
+canvas(ind) = true;
+imshowpair(I,canvas,'montage');
 
-% [Gmag,Gdir] = imgradient(dynamicInput{1});
-% [Gx, Gy] = imgradientxy(dynamicInput{1},'prewitt');
+figure
+indSu = sub2ind([193,193], summary(1:50,2), summary(1:50,1));
+canvasSu = false(193,193);
+canvasSu(indSu) = true;
+imshowpair(I,canvasSu,'montage');
+
 % figure
-% imshowpair(Gx, Gy,'montage');
-% C = imfuse(Gx, Gy, 'montage');
-% figure
-% imshowpair(Gmag,Gdir,'montage');
+% plot(c(:,1),c(:,2),':','LineWidth',8,'Color',[.9 .9 .9]); hold on;
+% scatter(summary(:,1),summary(:,2),75,'filled','MarkerFaceColor',[1 0 0],'MarkerEdgeColor',[1 0 0])
