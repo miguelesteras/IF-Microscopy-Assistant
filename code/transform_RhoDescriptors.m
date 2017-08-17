@@ -43,8 +43,8 @@ for i = 1:num_files
                 selection(:,1) = wrapTo2Pi(selection(:,1) + rotation);
                 rhoDescriptor = zeros(vecSize,1);
                 for n = 1:vecSize
-                    [~,idx3] = min(abs(selection-refAngles(n)));
-                    rhoDescriptor(n) = selection(idx3,2);
+                    [~,idx3] = min(abs(selection(:,1)-refAngles(n)));
+                    rhoDescriptor(n,1) = selection(idx3,2);
                 end                    
                 RhoDescriptors{count,m} = rhoDescriptor;
             end           
@@ -56,8 +56,7 @@ for i = 1:num_files
     %clearvars -except files num_files i
 end
 
-%%
-% 
+%% 
 % figure
 % selection = contourCoordenates{3,1};
 % rotation = rotationUp{3,1};
@@ -67,3 +66,8 @@ end
 % polarplot(selection2(:,1),selection2(:,2));
 % selection3 = [wrapTo2Pi(selection(:,1) + rotation - pi/2)  selection(:,2)];
 % polarplot(selection3(:,1),selection3(:,2));
+
+%%
+% figure
+% polarplot(selection(:,1),selection(:,2)); hold on
+% polarplot(refAngles,RhoDescriptors{end,end}); hold off
