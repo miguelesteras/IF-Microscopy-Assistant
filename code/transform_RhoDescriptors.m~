@@ -15,7 +15,7 @@
 %% Build data set of single cells
 
 seqLength = 8;             % Number of frames in learning sequence (x input + 1 target)
-vecSize   = 50;            % Descriptor vector size
+vecSize   = 32;            % Descriptor vector size
 
 files = dir('*_metadata.mat');      
 num_files = length(files);
@@ -28,25 +28,21 @@ for i = 1:num_files
     load(strcat(metadata.name,'_contourCoordenates.mat'),'contourCoordenates');     
 
     % detect sequence of length equal or greater than seqLength
-    noFrames = sum(double(~cellfun(@isempty,cellCoordenates)),2);
+    noFrames = sum(double(~cellfun(@isempty,contourCoordenates)),2);
     idx = find(noFrames >= seqLength);
     BoundaryDataSet = cell(100,seqLength); 
     count = 1;
     
     for j = 1:size(idx,1)
-        idx2 = find(~cellfun(@isempty,cellCoordenates(idx(j),:)));
+        idx2 = find(~cellfun(@isempty,contourCoordenates(idx(j),:)));
         for k = 1:size(idx2,2) - (seqLength-1)
-            % the rotation makes further pixel from center of image face East. 
+            % the rotation ([rotation to north] - pi/2) makes further pixel from center of image face East. 
             % The rho descriptors starts from that point and goes around the shape anticlockwise.
-            rotation = rotationUp{idx(j),idx2(k)} + pi/2;
+            rotation = rotationUp{idx(j),idx2(k)} - pi/2;
             for m = 1:seqLength                
-                selection = cellCoordenates{idx(j),idx2(k+m-1)};
+                selection = contourCoordenates{idx(j),idx2(k+m-1)};
                 selection(:,1) = wrapTo2Pi(selection(:,1) + rotation);
-                
-                % extract contour pixels only
-                % boundary(x,y,s)
-                %
-                % 
+                 
                 refAngles = linspace(0,2*pi,vecSize+1);
                 refAngles = refAngles(1:end-1);
                 rhoDescriptor = zeros(vecSize,1);
@@ -132,11 +128,13 @@ end
 %%
 
 figure
-selection = cellCoordenates{3,1};
+selection = contourCoordenates{3,1};
+rotation = rotationUp{3,1};
+
 polarplot(selection(:,1),selection(:,2)); hold on
-selection2 = [selection(:,1) + rotation selection(:,2)];
+% selection2 = [wrapTo2Pi(selection(:,1) + rotation) selection(:,2)];
 polarplot(selection2(:,1),selection2(:,2));
-selection3 = [wrapTo2Pi(selection2(:,1)) selection2(:,2)];
+selection3 = [wrapTo2Pi(selection(:,1) + rotation - pi/2)  selection(:,2)];
 polarplot(selection3(:,1),selection3(:,2));
 
 
