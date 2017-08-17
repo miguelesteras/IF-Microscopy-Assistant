@@ -24,22 +24,8 @@ for i = 1:num_files
     load(files(i).name,'metadata');                                  
     load(strcat(metadata.name,'_cellSequences.mat'),'cellSequences');   
     load(strcat(metadata.name,'_rotationUp.mat'),'rotationUp');
-    load(strcat(metadata.name,'_centerMass.mat'),'centerMass');  
     load(strcat(metadata.name,'_cellCoordenates.mat'),'cellCoordenates');     
-    
-%     cellCoordenates = cell(size(cellSequences));
-%     index = find(~cellfun(@isempty,cellSequences)); % non empty cells in cell sequences array
-%     for h = 1:size(index)    
-%         selection = cellSequences{index(h)};
-%         center = centerMass{index(h)};
-%         image = false(metadata.imageSize);
-%         image(selection) = true;                % only show selected cell in binary image
-%         stats = regionprops(image,'PixelList');
-%         coordenates = stats.PixelList - center;
-%         [theta, rho] = cart2pol(coordenates(:,1),coordenates(:,2));   % polar coordenates
-%         cellCoordenates{index(h)} = [theta rho]; 
-%     end
-
+   
     % detect sequence of length equal or greater than seqLength
     noFrames = sum(double(~cellfun(@isempty,cellCoordenates)),2);
     idx = find(noFrames >= seqLength);
@@ -49,14 +35,14 @@ for i = 1:num_files
     for j = 1:size(idx,1)
         idx2 = find(~cellfun(@isempty,cellCoordenates(idx(j),:)));
         for k = 1:size(idx2,2) - (seqLength-1)
-            % the rotation ( [rotation to north] - pi/2) makes further 
+            % the rotation ([rotation to north] + pi/2) makes further 
             % pixel from center of image face west. 
             % This way the boundary descriptor starts from that point and
             % goes around the shape clockwise.
-            rotation = rotationUp{idx(j),idx2(k)} - pi/2;
+            rotation = rotationUp{idx(j),idx2(k)} + pi/2;
             for m = 1:seqLength                
                 selection = cellCoordenates{idx(j),idx2(k+m-1)};
-                selection(:,1) = selection(:,1) + rotation;
+                selection(:,1) = wrapTo2Pi(selection(:,1) + rotation);
                 [x,y] = pol2cart(selection(:,1),selection(:,2));
                 mask = [round(x) round(y)];
                 
@@ -87,8 +73,8 @@ for i = 1:num_files
             count = count+1;
         end               
     end
-    %%
-    % standarize feature vector size
+    %% standarize feature vector size
+    
     BoundaryDataSetSt = cell(size(BoundaryDataSet));
     for k = 1:numel(BoundaryDataSet)
         set = BoundaryDataSet{k};
@@ -126,12 +112,10 @@ for i = 1:num_files
     
     save(strcat(metadata.name,'_BoundaryDataSet.mat'),'BoundaryDataSet');
     save(strcat(metadata.name,'_BoundaryDataSetSt.mat'),'BoundaryDataSetSt');     
-%   save(strcat(metadata.name,'_cellCoordenates.mat'),'cellCoordenates');     
     
 %     clearvars -except files num_files i
 end
 
-%%
 
 % figure
 % 

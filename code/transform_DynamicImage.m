@@ -56,7 +56,7 @@ for i = 1:num_files
             while m < seqLength                
                 canvas = false((metadata.maxRadious*2)+1, (metadata.maxRadious*2)+1);
                 selection = cellCoordenates{idx(j),idx2(k+m-1)};
-                selection(:,1) = selection(:,1) + rotation;          % apply rotation
+                selection(:,1) = wrapTo2Pi(selection(:,1) + rotation);          
                 [x,y] = pol2cart(selection(:,1),selection(:,2));
                 colSub = round(x)+metadata.maxRadious+1; 
                 rowSub = round(y)+metadata.maxRadious+1;

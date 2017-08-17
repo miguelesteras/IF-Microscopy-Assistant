@@ -1,4 +1,4 @@
-%% Phase 4.3. Transform cell masks into a conforming 2-D boundary
+%% Phase 4.4. Transform cell contours into a rho (distance from center) descriptor vector
 %   ======================================================================
 %   Code by Miguel Esteras-Bejar, 07/2017
 %   This code is part of the project:
@@ -7,16 +7,15 @@
 %   This codes aims to:
 %   1. Extract sequences of frames (f1, f2, ... , fx), from which
 %   input sequence = (f1, f2, ... , fx-1), and target sequence = fx
-%   2. Transform cell masks into a conforming 2-D boundary of fix size
-%   given by (x,y) coordenates. The boundary can shrink towards the 
-%   interior of the hull. 
+%   2. Transform cell contour into a descriptor vecctor containing the rho
+%   value for a given number of contour pixels (distance from center, in 
+%   the polar coordenate system).
 %   ======================================================================
 
 %% Build data set of single cells
 
-seqLength = 8;              % Number of frames in learning sequence (x input + 1 target)
-vecSize   = 100;            % Boundary descriptor vector size
-s = 0.8;
+seqLength = 8;             % Number of frames in learning sequence (x input + 1 target)
+vecSize   = 32;            % Descriptor vector size
 
 files = dir('*_metadata.mat');      
 num_files = length(files);
@@ -24,25 +23,39 @@ for i = 1:num_files
     load(files(i).name,'metadata');                                  
     load(strcat(metadata.name,'_cellSequences.mat'),'cellSequences');   
     load(strcat(metadata.name,'_rotationUp.mat'),'rotationUp');
+    load(strcat(metadata.name,'_centerMass.mat'),'centerMass');  
     load(strcat(metadata.name,'_cellCoordenates.mat'),'cellCoordenates');     
-   
+    load(strcat(metadata.name,'_contourCoordenates.mat'),'contourCoordenates');     
+
     % detect sequence of length equal or greater than seqLength
-    noFrames = sum(double(~cellfun(@isempty,cellCoordenates)),2);
+    noFrames = sum(double(~cellfun(@isempty,contourCoordenates)),2);
     idx = find(noFrames >= seqLength);
     BoundaryDataSet = cell(100,seqLength); 
     count = 1;
     
     for j = 1:size(idx,1)
-        idx2 = find(~cellfun(@isempty,cellCoordenates(idx(j),:)));
+        idx2 = find(~cellfun(@isempty,contourCoordenates(idx(j),:)));
         for k = 1:size(idx2,2) - (seqLength-1)
-            % the rotation ([rotation to north] + pi/2) makes further 
-            % pixel from center of image face west. 
-            % This way the boundary descriptor starts from that point and
-            % goes around the shape clockwise.
-            rotation = rotationUp{idx(j),idx2(k)} + pi/2;
+            % the rotation ([rotation to north] - pi/2) makes further pixel from center of image face East. 
+            % The rho descriptors starts from that point and goes around the shape anticlockwise.
+            rotation = rotationUp{idx(j),idx2(k)} - pi/2;
             for m = 1:seqLength                
-                selection = cellCoordenates{idx(j),idx2(k+m-1)};
-                selection(:,1) = selection(:,1) + rotation;
+                selection = contourCoordenates{idx(j),idx2(k+m-1)};
+                selection(:,1) = wrapTo2Pi(selection(:,1) + rotation);
+                
+                % extract contour pixels only
+                % boundary(x,y,s)
+                %
+                % 
+                refAngles = linspace(0,2*pi,vecSize+1);
+                refAngles = refAngles(1:end-1);
+                rhoDescriptor = zeros(vecSize,1);
+                for n = 1:numel(refAngles)
+                    [~,idx3] = min(abs(selection-refAngle(n)));
+                    rhoDescriptor(n) = selection(idx3,2);
+                
+                
+                
                 [x,y] = pol2cart(selection(:,1),selection(:,2));
                 mask = [round(x) round(y)];
                 
@@ -73,8 +86,8 @@ for i = 1:num_files
             count = count+1;
         end               
     end
-    %% standarize feature vector size
-    
+    %%
+    % standarize feature vector size
     BoundaryDataSetSt = cell(size(BoundaryDataSet));
     for k = 1:numel(BoundaryDataSet)
         set = BoundaryDataSet{k};
@@ -113,36 +126,25 @@ for i = 1:num_files
     save(strcat(metadata.name,'_BoundaryDataSet.mat'),'BoundaryDataSet');
     save(strcat(metadata.name,'_BoundaryDataSetSt.mat'),'BoundaryDataSetSt');     
     
-%     clearvars -except files num_files i
+    %clearvars -except files num_files i
 end
 
+%%
 
-% figure
-% 
-% ind = sub2ind([200,200], contour(:,2)+100, contour(:,1)+100);
-% canvas = false(200,200);
-% canvas(ind) = true;
-% 
-% ind2 = sub2ind([200,200], cell(:,2)+100, cell(:,1)+100);
-% canvas2 = false(200,200);
-% canvas2(ind2) = true;
-% 
-% imshowpair(canvas,canvas2,'montage');
-% 
-% figure
-% I = BoundaryDataSetSt{20,8};
-% numel(I)
-% ind = sub2ind([200,200], I(:,2)+100, I(:,1)+100);
-% canvas = false(200,200);
-% canvas(ind) = true;
-% imshow(canvas)
+figure
+selection = contourCoordenates{3,1};
+rotation = rotationUp{3,1};
 
-% figure
-% indSu = sub2ind([193,193], summary(1:50,2), summary(1:50,1));
-% canvasSu = false(193,193);
-% canvasSu(indSu) = true;
-% imshowpair(I,canvasSu,'montage');
+polarplot(selection(:,1),selection(:,2)); hold on
+selection2 = [wrapTo2Pi(selection(:,1) + rotation) selection(:,2)];
+polarplot(selection2(:,1),selection2(:,2));
+selection3 = [wrapTo2Pi(selection(:,1) + rotation - pi/2)  selection(:,2)];
+polarplot(selection3(:,1),selection3(:,2));
 
-% figure
-% plot(c(:,1),c(:,2),':','LineWidth',8,'Color',[.9 .9 .9]); hold on;
-% scatter(summary(:,1),summary(:,2),75,'filled','MarkerFaceColor',[1 0 0],'MarkerEdgeColor',[1 0 0])
+
+%%
+
+figure 
+ind = sub2ind([200,200], y+100, x+100);
+canvas = false(200,200);
+canvas(ind) = true;
