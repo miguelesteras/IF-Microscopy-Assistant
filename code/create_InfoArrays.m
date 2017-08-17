@@ -28,27 +28,33 @@ for i = 1:num_files
     contourCoordenates = cell(size(cellSequences));
     cellCoordenates = cell(size(cellSequences));
     
+    % for every non-empty cell in cell sequence; save pixel location 
+    % (whole cell and contour) in polar system (to facilitate rotations) 
+    % and normalized to center of mass at [0,0]. The rotation necessary to
+    % make the contour pixel further from the center face up (theta=pi/2)
+    % is calculate and will be used to normalize cell orientation before
+    % training.
     for j = 1:size(index)
-        selection = cellSequences{index(j)};    % select one cell
+        selection = cellSequences{index(j)};
         image = false(metadata.imageSize);
         image(selection) = true;                % only show selected cell in binary image
         stats = regionprops(image,'centroid','PixelList');  
-        center = round(stats.Centroid);         % coordenates for center of mass        
+        center = round(stats.Centroid);            
         coordenates = stats.PixelList - center;
-        [theta, rho] = cart2pol(coordenates(:,1),coordenates(:,2));   % polar coordenates
+        [theta, rho] = cart2pol(coordenates(:,1),coordenates(:,2)); 
         cellCoordenates{index(j)} = [theta rho];        
         SE = strel('disk',2);
         contour = bwmorph(imopen(image,SE),'remove');       
         stats2 = regionprops(contour,'PixelList');       
-        carteCoordenates = stats2.PixelList - center;        % cartesian coordenates of cell contour (with origin in centroid)
+        carteCoordenates = stats2.PixelList - center;      
         contourCoordenates{index(j)} = carteCoordenates;
-        [theta, rho] = cart2pol(carteCoordenates(:,1),carteCoordenates(:,2));   % polar coordenates
+        [theta, rho] = cart2pol(carteCoordenates(:,1),carteCoordenates(:,2));
         [~, idx] = max(rho);
         rotation = pi/2 - theta(idx);
         centerMass{index(j)} = center;
         maxRadii{index(j)} = [theta(idx) rho(idx)];
         rotationUp{index(j)} = rotation;
-        contourCoordenates{index(j)} = [theta rho]; % polar coordenates
+        contourCoordenates{index(j)} = [theta rho];
 
     end
     

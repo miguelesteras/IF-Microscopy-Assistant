@@ -9,6 +9,7 @@
 %   contour pixels and center of mass. 
 %   ======================================================================
 
+%% Build data set of single cells
 
 files = dir('*_metadata.mat');      
 num_files = length(files);
@@ -17,11 +18,9 @@ for i = 1:num_files
     load(strcat(metadata.name,'_cellSequences.mat'),'cellSequences');   
     load(strcat(metadata.name,'_singleCellMask.mat'),'singleCellMask');
     
-    % index non-empty cells in cell sequences
-    index = find(~cellfun(@isempty,cellSequences));
-    
+    index = find(~cellfun(@isempty,cellSequences)); % non empty cells in cell sequences array
     % cell sequences index matches the new cell arrays created, containing
-    % information computed for every non-empty cell.
+    % information computed for every non-emot
     centerMass = cell(size(cellSequences));
     maxRadii = cell(size(cellSequences));
     rotationUp = cell(size(cellSequences));
