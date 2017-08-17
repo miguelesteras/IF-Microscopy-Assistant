@@ -25,8 +25,8 @@ for i = 1:num_files
     centerMass = cell(size(cellSequences));
     maxRadii = cell(size(cellSequences));
     rotationUp = cell(size(cellSequences));
-    contourCoordenates = cell(size(cellSequences));
-    cellCoordenates = cell(size(cellSequences));
+    contourCoordinates = cell(size(cellSequences));
+    cellCoordinates = cell(size(cellSequences));
     
     % for every non-empty cell in cell sequence; save pixel location 
     % (whole cell and contour) in polar system (to facilitate rotations) 
@@ -42,19 +42,18 @@ for i = 1:num_files
         center = round(stats.Centroid);            
         coordenates = stats.PixelList - center;
         [theta, rho] = cart2pol(coordenates(:,1),coordenates(:,2)); 
-        cellCoordenates{index(j)} = [wrapTo2Pi(theta) rho];        
+        cellCoordinates{index(j)} = [wrapTo2Pi(theta) rho];        
         SE = strel('disk',2);
         contour = bwmorph(imopen(image,SE),'remove');       
         stats2 = regionprops(contour,'PixelList');       
         carteCoordenates = stats2.PixelList - center;      
-        contourCoordenates{index(j)} = carteCoordenates;
         [theta, rho] = cart2pol(carteCoordenates(:,1),carteCoordenates(:,2));
         [~, idx] = max(rho);
         rotation = pi/2 - theta(idx);
         centerMass{index(j)} = center;
         maxRadii{index(j)} = [theta(idx) rho(idx)];
         rotationUp{index(j)} = rotation;
-        contourCoordenates{index(j)} = [wrapTo2Pi(theta) rho];
+        contourCoordinates{index(j)} = [wrapTo2Pi(theta) rho];
 
     end
     
@@ -65,8 +64,8 @@ for i = 1:num_files
     save(strcat(metadata.name,'_centerMass.mat'),'centerMass');     
     save(strcat(metadata.name,'_maxRadii.mat'),'maxRadii');     
     save(strcat(metadata.name,'_rotationUp.mat'),'rotationUp');     
-    save(strcat(metadata.name,'_contourCoordenates.mat'),'contourCoordenates');     
-    save(strcat(metadata.name,'_cellCoordenates.mat'),'cellCoordenates');     
+    save(strcat(metadata.name,'_contourCoordinates.mat'),'contourCoordinates');     
+    save(strcat(metadata.name,'_cellCoordinates.mat'),'cellCoordinates');     
 
     clearvars -except files num_files i
 end

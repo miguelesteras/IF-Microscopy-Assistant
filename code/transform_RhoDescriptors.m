@@ -24,22 +24,22 @@ num_files = length(files);
 for i = 1:num_files
     load(files(i).name,'metadata');                                  
     load(strcat(metadata.name,'_rotationUp.mat'),'rotationUp');
-    load(strcat(metadata.name,'_contourCoordenates.mat'),'contourCoordenates');     
+    load(strcat(metadata.name,'_contourCoordinates.mat'),'contourCoordinates');     
 
     % detect sequence of length equal or greater than seqLength
-    noFrames = sum(double(~cellfun(@isempty,contourCoordenates)),2);
+    noFrames = sum(double(~cellfun(@isempty,contourCoordinates)),2);
     idx = find(noFrames >= seqLength);
     RhoDescriptors = cell(100,seqLength); 
     count = 1;
     
     for j = 1:size(idx,1)
-        idx2 = find(~cellfun(@isempty,contourCoordenates(idx(j),:)));
+        idx2 = find(~cellfun(@isempty,contourCoordinates(idx(j),:)));
         for k = 1:size(idx2,2) - (seqLength-1)
             % the rotation ([rotation to north] - pi/2) makes further pixel from center of image face East. 
             % The rho descriptors starts from that point and goes around the shape anticlockwise.
             rotation = rotationUp{idx(j),idx2(k)} - pi/2;
             for m = 1:seqLength                
-                selection = contourCoordenates{idx(j),idx2(k+m-1)};
+                selection = contourCoordinates{idx(j),idx2(k+m-1)};
                 selection(:,1) = wrapTo2Pi(selection(:,1) + rotation);
                 rhoDescriptor = zeros(vecSize,1);
                 for n = 1:vecSize

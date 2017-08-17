@@ -31,7 +31,7 @@ for i = 1:num_files
     load(strcat(metadata.name,'_cellSequences.mat'),'cellSequences');   
     load(strcat(metadata.name,'_singleCellMask.mat'),'singleCellMask');
     load(strcat(metadata.name,'_rotationUp.mat'),'rotationUp');
-    load(strcat(metadata.name,'_contourCoordenates.mat'),'contourCoordenates');     
+    load(strcat(metadata.name,'_contourCoordinates.mat'),'contourCoordinates');     
 
     % detect sequence of length equal or greater than seqLength
     noFrames = sum(double(~cellfun(@isempty,cellSequences)),2);
@@ -47,7 +47,7 @@ for i = 1:num_files
             m = 1;
             
             while m < seqLength                
-                input = contourCoordenates{idx(j),idx2(k+m-1)};
+                input = contourCoordinates{idx(j),idx2(k+m-1)};
                 input(:,1) = input(:,1) + rotation;          % apply rotation
                 [x,y] = pol2cart(input(:,1),input(:,2));
                 contour = [round(x) round(y)];         
@@ -56,7 +56,7 @@ for i = 1:num_files
                 m = m+1;
             end        
 
-            target = contourCoordenates{idx(j),idx2(k+m-1)};
+            target = contourCoordinates{idx(j),idx2(k+m-1)};
             target(:,1) = target(:,1) + rotation;          % apply rotation
             [x,y] = pol2cart(target(:,1),target(:,2));
             contour = [round(x) round(y)];         

@@ -12,17 +12,18 @@
 %
 %   ======================================================================
 
-seqLength = 10;              % Number of frames in learning sequence (x input + 1 target)
+% Number of frames in learning sequence (x input + 1 target)
+seqLength = 8; 
 
 files = dir('*_metadata.mat');      
 num_files = length(files);
 for i = 1:num_files
     load(files(i).name,'metadata');                                  
     load(strcat(metadata.name,'_rotationUp.mat'),'rotationUp');
-    load(strcat(metadata.name,'_cellCoordenates.mat'),'cellCoordenates');     
+    load(strcat(metadata.name,'_cellCoordinates.mat'),'cellCoordinates');     
 
     % detect sequence of length equal or greater than seqLength
-    noFrames = sum(double(~cellfun(@isempty,cellCoordenates)),2);
+    noFrames = sum(double(~cellfun(@isempty,cellCoordinates)),2);
     idx = find(noFrames >= seqLength);
     dynamicImages = cell(100,2); 
     count = 1;
@@ -31,14 +32,14 @@ for i = 1:num_files
     % by the max radious detected in sample, +1 pixel. This makes is square
     % and containing a central pixel (center of mass).
     for j = 1:size(idx,1)
-        idx2 = find(~cellfun(@isempty,cellCoordenates(idx(j),:)));
+        idx2 = find(~cellfun(@isempty,cellCoordinates(idx(j),:)));
         for k = 1:size(idx2,2) - (seqLength-1)
             rotation = rotationUp{idx(j),idx2(k)};
             input = int8(zeros((metadata.maxRadious*2)+1, (metadata.maxRadious*2)+1));
             m = 1;            
             while m < seqLength                
                 canvas = false((metadata.maxRadious*2)+1, (metadata.maxRadious*2)+1);
-                selection = cellCoordenates{idx(j),idx2(k+m-1)};
+                selection = cellCoordinates{idx(j),idx2(k+m-1)};
                 selection(:,1) = wrapTo2Pi(selection(:,1) + rotation);          
                 [x,y] = pol2cart(selection(:,1),selection(:,2));
                 colSub = round(x)+metadata.maxRadious+1; 
@@ -53,7 +54,7 @@ for i = 1:num_files
             dynamicImages{count,1} = mat2gray(input);
             target = int8(zeros((metadata.maxRadious*2)+1, (metadata.maxRadious*2)+1));
             canvas = false((metadata.maxRadious*2)+1, (metadata.maxRadious*2)+1);
-            selection = cellCoordenates{idx(j),idx2(k+m-1)};
+            selection = cellCoordinates{idx(j),idx2(k+m-1)};
             selection(:,1) = selection(:,1) + rotation;          
             [x,y] = pol2cart(selection(:,1),selection(:,2));
             colSub = round(x)+metadata.maxRadious+1; 
@@ -69,16 +70,16 @@ for i = 1:num_files
     end
     save(strcat(metadata.name,'_dynamicImages.mat'),'dynamicImages');     
     
-%     clearvars -except files num_files i
+    clearvars -except files num_files i
 end
 
 %% Plots
 
-% canvas = cat(3, dynamicInput{1}, dynamicInput{1}, dynamicInput{1});
-% canvas(:,:,1) = canvas(:,:,1) + dynamicTarget{1};
-% canvas(:,:,2) = canvas(:,:,2) - dynamicTarget{1};
-% canvas(:,:,3) = canvas(:,:,3) - dynamicTarget{1};
-% imshow(canvas)
+canvas = cat(3, dynamicImages{1,1}, dynamicImages{1,1}, dynamicImages{1,1});
+canvas(:,:,1) = canvas(:,:,1) + dynamicImages{1,2};
+canvas(:,:,2) = canvas(:,:,2) - dynamicImages{1,2};
+canvas(:,:,3) = canvas(:,:,3) - dynamicImages{1,2};
+imshow(canvas)
 
 %% Transform into gradients
 
