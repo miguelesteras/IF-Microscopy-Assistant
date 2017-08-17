@@ -18,22 +18,8 @@ files = dir('*_metadata.mat');
 num_files = length(files);
 for i = 1:num_files
     load(files(i).name,'metadata');                                  
-    load(strcat(metadata.name,'_cellSequences.mat'),'cellSequences');   
     load(strcat(metadata.name,'_rotationUp.mat'),'rotationUp');
-    load(strcat(metadata.name,'_centerMass.mat'),'centerMass');     
-    
-    cellCoordenates = cell(size(cellSequences));
-    index = find(~cellfun(@isempty,cellSequences)); % non empty cells in cell sequences array
-    for h = 1:size(index)    
-        selection = cellSequences{index(h)};
-        center = centerMass{index(h)};
-        image = false(metadata.imageSize);
-        image(selection) = true;                % only show selected cell in binary image
-        stats = regionprops(image,'PixelList');
-        coordenates = stats.PixelList - center;
-        [theta, rho] = cart2pol(coordenates(:,1),coordenates(:,2));   % polar coordenates
-        cellCoordenates{index(h)} = [theta rho]; 
-    end
+    load(strcat(metadata.name,'_cellCoordenates.mat'),'cellCoordenates');     
 
     % detect sequence of length equal or greater than seqLength
     noFrames = sum(double(~cellfun(@isempty,cellCoordenates)),2);
@@ -82,7 +68,6 @@ for i = 1:num_files
         end               
     end
     save(strcat(metadata.name,'_dynamicImages.mat'),'dynamicImages');     
-    save(strcat(metadata.name,'_cellCoordenates.mat'),'cellCoordenates');     
     
 %     clearvars -except files num_files i
 end

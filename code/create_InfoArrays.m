@@ -42,7 +42,7 @@ for i = 1:num_files
         center = round(stats.Centroid);            
         coordenates = stats.PixelList - center;
         [theta, rho] = cart2pol(coordenates(:,1),coordenates(:,2)); 
-        cellCoordenates{index(j)} = [theta rho];        
+        cellCoordenates{index(j)} = [wrapTo2Pi(theta) rho];        
         SE = strel('disk',2);
         contour = bwmorph(imopen(image,SE),'remove');       
         stats2 = regionprops(contour,'PixelList');       
@@ -54,7 +54,7 @@ for i = 1:num_files
         centerMass{index(j)} = center;
         maxRadii{index(j)} = [theta(idx) rho(idx)];
         rotationUp{index(j)} = rotation;
-        contourCoordenates{index(j)} = [theta rho];
+        contourCoordenates{index(j)} = [wrapTo2Pi(theta) rho];
 
     end
     
