@@ -9,38 +9,6 @@
 %   vector containing the fourier descriptors.
 %   ======================================================================
 
-f = dynamicImages{1,1};
-n0 = size(f,1);
-% fourier transform
-F = fft2(f) / n0;
-% Conservation of the energy.
-disp(strcat(['Energy of Image:   ' num2str(norm(f(:)))]));
-disp(strcat(['Energy of Fourier: ' num2str(norm(F(:)))]));
-% Compute the logarithm of the Fourier magnitude
-L = fftshift(log( abs(F)+1e-1 ));
-% Display. The 0 low frequency goes in the middle. 
-clf;
-imageplot(L, 'Log(Fourier transform)');
-
-% Non-linear Fourier Approximation; Keeping the M largest coefficients. 
-% Set a threshold T>0
-T = .2;
-% Hard thresholding.
-FT = F .* (abs(F)>T);
-% Display
-clf;
-L = fftshift(log( abs(FT)+1e-1 ));
-imageplot(L, 'thresholded Log(Fourier transform)');
-% Inverse Fourier transform to obtain image
-fM = real(ifft2(FT)*n0);
-% Display
-clf;
-imageplot(clamp(fM), ['Non-linear, Fourier, SNR=' num2str(snr(f,fM), 4) 'dB']);
-
-
-
-
-%%
 files = dir('*_metadata.mat');      
 num_files = length(files);
 for i = 1:num_files

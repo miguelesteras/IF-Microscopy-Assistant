@@ -28,20 +28,18 @@ files = dir('*_metadata.mat');
 num_files = length(files);
 for i = 1:num_files
     load(files(i).name,'metadata');                                  
-    load(strcat(metadata.name,'_cellSequences.mat'),'cellSequences');   
-    load(strcat(metadata.name,'_singleCellMask.mat'),'singleCellMask');
     load(strcat(metadata.name,'_rotationUp.mat'),'rotationUp');
     load(strcat(metadata.name,'_contourCoordinates.mat'),'contourCoordinates');     
 
     % detect sequence of length equal or greater than seqLength
-    noFrames = sum(double(~cellfun(@isempty,cellSequences)),2);
+    noFrames = sum(double(~cellfun(@isempty,contourCoordinates)),2);
     idx = find(noFrames >= seqLength);
     fourierInput = cell(100,4); 
     fourierTarget = cell(100,1);
     count = 1;
     
     for j = 1:size(idx,1)
-        idx2 = find(~cellfun(@isempty,cellSequences(idx(j),:)));
+        idx2 = find(~cellfun(@isempty,contourCoordinates(idx(j),:)));
         for k = 1:size(idx2,2) - (seqLength-1)
             rotation = rotationUp{idx(j),idx2(k)};
             m = 1;
