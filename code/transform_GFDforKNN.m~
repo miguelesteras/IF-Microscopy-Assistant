@@ -9,7 +9,6 @@
 %   input sequence = (f1, f2, ... , fx-1), and target sequence = fx
 %   2. Transform cell contour into GFD. Code by Frederik Kratzert
 %   https://uk.mathworks.com/matlabcentral/fileexchange/52643-fd-=-gfd-bw-m-n--implementation-of-the-generic-fourier-descriptors
-%   Binary image centered using centerobject funtion by Frederik Kratzert. 
 %   ======================================================================
 
 % seqLength = Number of frames in learning sequence (x input + 1 target).
@@ -18,9 +17,9 @@
 % transform (in percentage of total number of points). The transformation
 % is set not to be rotation invariant.
 seqLength = 8;              
-M = 9;          % radial frequency                 
-N = 9;          % angular frequency    
-GFDDescriptors = [];
+M = 8;          % radial frequency                 
+N = 8;          % angular frequency    
+GFDdescriptors = [];
 
 files = dir('*_metadata.mat');      
 num_files = length(files);
@@ -32,7 +31,7 @@ for i = 1:num_files
     % detect sequence of length equal or greater than seqLength
     noFrames = sum(double(~cellfun(@isempty,cellCoordinates)),2);
     idx = find(noFrames >= seqLength);
-    GFDtemp = cell(100,seqLength); 
+    GFDDtemp = cell(100,seqLength); 
     count = 1;
     
     for j = 1:size(idx,1)
@@ -49,18 +48,16 @@ for i = 1:num_files
                 cellIdx = sub2ind(size(canvas), rowSub, colSub);
                 canvas(cellIdx) = true;
                 canvas = imfill(canvas,'holes');
-                canvas = centerobject(canvas);
                 descriptors = gfd(canvas,M,N);   
                 GFDtemp{count,m} = descriptors(1:end-1);                
             end        
         count = count +1;
         end
     end
-    GFDDescriptors = [GFDDescriptors;GFDtemp];
-    clearvars -except files num_files i GFDDescriptor seqLength M N
-end
+    save(strcat(metadata.name,'_GFDDescriptor.mat'),'GFDDescriptor');     
 
-save('GFDDescriptors.mat','GFDDescriptors');     
+    %clearvars -except files num_files i GFDtemp
+end
 
 %% grphs
 
