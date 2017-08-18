@@ -1,4 +1,4 @@
-%% Phase 4.1. Transform cell silhouettes into Fourier descriptors
+%% Phase 5.7. Train KNN with Generic Fourier descriptors (GFD)
 %   ======================================================================
 %   Code by Miguel Esteras-Bejar, 07/2017
 %   This code is part of the project:
@@ -7,22 +7,12 @@
 %   This codes aims to:
 %   1. Extract sequences of frames (f1, f2, ... , fx), from which
 %   input sequence = (f1, f2, ... , fx-1), and target sequence = fx
-%   2. Transform cell silhouette into Fourier descriptors.
-%   Fourier descriptors as first described by Kuhl and Giardina in 
-%   "Elliptic Fourier features of a closed contour" 
-%   Computer Graphics and Image Processing 18:236-258 1982
-%   This implementation has been created by David Thomas from the 
-%   University of Melbourne, and can be found at:
-%   https://uk.mathworks.com/matlabcentral/fileexchange/12746-elliptical-fourier-shape-descriptors
-%   Copyright (c) 2005, David Thomas
+%   2. Transform cell contour into GFD. Code by Frederik Kratzert
+%   https://uk.mathworks.com/matlabcentral/fileexchange/52643-fd-=-gfd-bw-m-n--implementation-of-the-generic-fourier-descriptors
 %   ======================================================================
 
-%% Build data set of single cells
-
-seqLength = 8;              % Number of frames in learning sequence (x input + 1 target)
-NoHarmonics = 25;           % Number of Harmonics (interger greater than 0)
-NormSize = true;            % normalize size of object
-NormOrientation = false;    % normalize orientation of object
+% Number of frames in learning sequence (x input + 1 target)
+seqLength = 8; 
 
 files = dir('*_metadata.mat');      
 num_files = length(files);
