@@ -93,23 +93,22 @@ canvas = false(200,200);
 canvas(ind) = true;
 
 % fourier descriptor
-C = 20;                 % number of coefficients (description vector size)
-P = 0.12;               % number of sampling points in percent
-rotationInva = false;
-[a,b,c,d,~] = ellipticFourierDescriptor(canvas, C, P, rotationInva);
+p = 0.12; % number of sampling points in percent
+rotationInva = false; 
+[a,b,c,d,~] = ellipticFourierDescriptor(canvas, 20, p, rotationInva);
 
-% Image reconstruction form fourier descriptor. T = number of sampling 
-% points for reconstruction.
+% Image reconstruction form fourier descriptor. T = 
+T = 300;    % number of sampling points for reconstruction
 xt = ellipticFourierFunction(a,b,T);
 yt = ellipticFourierFunction(c,d,T);
+
 plp = zeros(1,T);
 for t = 1:T
     plp(t) = xt(t) + i*yt(t);
 end
-% plot reconstructed image with center [100,100] and rescale by scaleF.
-scaleF = 50;
-x = round(real(plp)*scaleF)';
-y = round(imag(plp)*scaleF)';
+
+x = round(real(plp)*50)';
+y = round(imag(plp)*50)';
 ind2 = sub2ind([200,200], y+100, x+100);
 canvas2 = false(200,200);
 canvas2(ind2) = true;
