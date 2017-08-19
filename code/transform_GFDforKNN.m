@@ -13,14 +13,12 @@
 %   ======================================================================
 
 % seqLength = Number of frames in learning sequence (x input + 1 target).
-% M determines the number of coefficients (and the description vector
-% size). N determines the number of sampling points used for the fourier
-% transform (in percentage of total number of points). The transformation
-% is set not to be rotation invariant.
+% M is the radial frequency. N is the angular frequency.
 seqLength = 8;              
-M = 9;          % radial frequency                 
-N = 10;          % angular frequency    
+M = 9;                           
+N = 10;   
 GFDDescriptors = [];
+GFDDescriptorsScaled = [];
 scaleFactor = [linspace(1,2,seqLength-1) 1];
 
 files = dir('*_metadata.mat');      
@@ -73,7 +71,7 @@ for i = 1:num_files
     GFDDescriptors = [GFDDescriptors;GFDtemp];
     GFDDescriptorsScaled = [GFDDescriptorsScaled;GFDtemp2];
 
-    clearvars -except files num_files i GFDDescriptor seqLength M N
+    %clearvars -except files num_files i GFDDescriptor seqLength M N
 end
 
 save('GFDDescriptors.mat','GFDDescriptors');     
@@ -81,8 +79,15 @@ save('GFDDescriptorsScaled.mat','GFDDescriptorsScaled');
 
 %% Train KNN classifier
 
-% maybe ['Distance','hamming']
-KNN = fitcknn(X,Y,'OptimizeHyperparameters','auto');
+X = GFDDescriptorsScaled(:,1:seqLength-1);
+X = cell2mat(cellfun(@transpose,X,'UniformOutput',0));
+% Y = query sequence
+
+% look up amoung all stored sequences
+[IDX,D] = knnsearch(X,Y,'NSMethod','exhaustive', 'Distance', 'euclidean');
+
+% retrieve predictions
+preditions = GFDDescriptorsScaled(IDX);
 
 
 
