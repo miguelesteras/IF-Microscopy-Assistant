@@ -19,7 +19,7 @@
 % is set not to be rotation invariant.
 seqLength = 8;              
 M = 9;          % radial frequency                 
-N = 9;          % angular frequency    
+N = 10;          % angular frequency    
 GFDDescriptors = [];
 
 files = dir('*_metadata.mat');      
@@ -32,7 +32,7 @@ for i = 1:num_files
     % detect sequence of length equal or greater than seqLength
     noFrames = sum(double(~cellfun(@isempty,cellCoordinates)),2);
     idx = find(noFrames >= seqLength);
-    GFDtemp = cell(100,seqLength); 
+    GFDtemp = cell(100,seqLength+1); 
     count = 1;
     
     for j = 1:size(idx,1)
@@ -48,12 +48,14 @@ for i = 1:num_files
                 rowSub = round(y)+metadata.maxRadious+1;
                 cellIdx = sub2ind(size(canvas), rowSub, colSub);
                 canvas(cellIdx) = true;
-                canvas = imfill(canvas,'holes');
+                canvas = bwareaopen(bwmorph(imfill(canvas,'holes'),'bridge'),10);
                 canvas = centerobject(canvas);
                 descriptors = gfd(canvas,M,N);   
                 GFDtemp{count,m} = descriptors(1:end-1);                
-            end        
-        count = count +1;
+            end
+            % the last column stores the binary image of the target frame
+            GFDtemp{count,end} = canvas;
+            count = count +1;
         end
     end
     GFDDescriptors = [GFDDescriptors;GFDtemp];
@@ -62,18 +64,9 @@ end
 
 save('GFDDescriptors.mat','GFDDescriptors');     
 
-%% grphs
+%% Create a dictionary of GFD descriptors using all single cells
 
-ind = sub2ind([200,200], contour(:,2)+100, contour(:,1)+100);
-canvas = false(200,200);
-canvas(ind) = true;
-% reverse descriptor
-descriptor = fEfourier(contour, NoHarmonics, NormSize, NormOrientation);
-image = rEfourier(descriptor, NoHarmonics, 100);
-ind2 = sub2ind([200,200], (round(image(:,2)/10)+100), round((image(:,1)/10)+100));
-canvas2 = false(200,200);
-canvas2(ind2) = true;
-figure
-imshowpair(canvas,canvas2,'montage');
+
+
 
 
