@@ -77,20 +77,37 @@ end
 save('GFDDescriptors.mat','GFDDescriptors');     
 save('GFDDescriptorsScaled.mat','GFDDescriptorsScaled');     
 
-%% Train KNN classifier
+%% K-Nearest Neighbours search using stored GFD sequences
 
+% create training and query set.
 X = GFDDescriptorsScaled(:,1:seqLength-1);
 X = cell2mat(cellfun(@transpose,X,'UniformOutput',0));
-% Y = query sequence
+Ximg = GFDDescriptorsScaled(:,end);
 
-% look up amoung all stored sequences
+testRatio = .15;
+testIdx = randi([1 size(X,1)],1,round(size(X,1)*testRatio));
+Y = X(testIdx,:);         
+Yimg = Ximg(testIdx,:);
+X(testIdx,:) = [];
+Ximg(testIdx,:) = [];
+
+% look up amoung all stored sequences (X) the NN of each observation in Y
 [IDX,D] = knnsearch(X,Y,'NSMethod','exhaustive', 'Distance', 'euclidean');
 
 % retrieve predictions
-preditions = GFDDescriptorsScaled(IDX);
+Yhat = Ximg(IDX);
+
+% compare predicted against target shape
 
 
+% plot shapes
+imshowpair(Yimg{1},Yhat{1},'montage');
 
-
-
+toGray = 255 * uint8(Yimg{1});
+toGray2 = 255 * uint8(Yhat{1});
+image = cat(3, grayImage, grayImage, grayImage);
+image(:,:,1) = image(:,:,1) + toGray2;
+image(:,:,2) = image(:,:,2) - toGray2;
+image(:,:,3) = image(:,:,3) - toGray2;
+imshow(image)
 

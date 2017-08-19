@@ -77,18 +77,27 @@ end
 save('GFDDescriptors.mat','GFDDescriptors');     
 save('GFDDescriptorsScaled.mat','GFDDescriptorsScaled');     
 
-%% Train KNN classifier
-Y = GFDDescriptorsScaled(:,seqLength);
-Y = cell2mat(cellfun(@transpose,Y,'UniformOutput',0));
+%% K-Nearest Neighbours search using stored GFD sequences
 
+% create training and query set.
 X = GFDDescriptorsScaled(:,1:seqLength-1);
 X = cell2mat(cellfun(@transpose,X,'UniformOutput',0));
+Ximg = GFDDescriptorsScaled(:,end);
 
-% train
-KNN = fitcknn(X,Y,'OptimizeHyperparameters','auto');
-% predict
-Yhat = predict(KNN,X);
+testRatio = .15;
+testIdx = randi([1 size(X,1)],1,round(size(X,1)*testRatio));
+Y = X(testIdx,:);         
+Yimg = Ximg(testIdx,:);
+X(testIdx,:) = [];
+Ximg(testIdx,:) = [];
 
+% look up amoung all stored sequences (X) the NN of each observation in Y
+[IDX,D] = knnsearch(X,Y,'NSMethod','exhaustive', 'Distance', 'euclidean');
+
+% retrieve predictions
+preditions = Ximg(IDX);
+
+% compare predictions
 
 
 
