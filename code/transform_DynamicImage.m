@@ -42,8 +42,11 @@ for i = 1:num_files
                 selection = cellCoordinates{idx(j),idx2(k+m-1)};
                 selection(:,1) = wrapTo2Pi(selection(:,1) + rotation);          
                 [x,y] = pol2cart(selection(:,1),selection(:,2));
+                % including a change in the coordenates system, from origin
+                % [0,0] being center of image to [0,0] being top left image
+                % corner and postive y axis = rows (hence 'y*-1' is needed)
                 colSub = round(x)+metadata.maxRadious+1; 
-                rowSub = round(y)+metadata.maxRadious+1;
+                rowSub = round(y*-1)+metadata.maxRadious+1;
                 cellIdx = sub2ind(size(canvas), rowSub, colSub);
                 canvas(cellIdx) = true;
                 SE = strel('disk',2);
