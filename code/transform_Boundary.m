@@ -22,7 +22,6 @@ files = dir('*_metadata.mat');
 num_files = length(files);
 for i = 1:num_files
     load(files(i).name,'metadata');                                  
-    load(strcat(metadata.name,'_cellSequences.mat'),'cellSequences');   
     load(strcat(metadata.name,'_rotationUp.mat'),'rotationUp');
     load(strcat(metadata.name,'_cellCoordinates.mat'),'cellCoordinates');     
    
