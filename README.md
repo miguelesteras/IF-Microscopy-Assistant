@@ -2,7 +2,7 @@
 ## For the analysis and modelling of Immunofluorescence (IF) cell microscopy
 This project aims to construct a cloud-based service to help with the analysis and morphological modeling in Immunofluorescence cell microscopy.
 <br><br>
-## Code Files (MATLAB R2017a)
+## MATLAB (R2017a) code
 <br>
 -> create_masks.m <br>
 Converts a .tiff file containing a set of rgb images in which [red channel = nucleus] and [green channel = cytoplasm, into a cell array of rgb images or video frames (uint8), a binary mask of single cells, a binary mask of cell clusters and a binary mask of nucleus. <br><br>
