@@ -29,7 +29,7 @@ Transform cell contour into Generic Fourier Descriptors (GFD) (based on code by 
 Transforms cell contour coordenates into a vector containing the max rho coordinate for the set pixel at specific evenly spaced angles.<br><br>
 
 <br><br><br><br>
-**Reference**
+## Reference
 <br>
 This code is part of the project: <br>
 'Tracking of temporally occluded or overlapping structures in live cell microscopy' by Miguel Esteras. <br>
