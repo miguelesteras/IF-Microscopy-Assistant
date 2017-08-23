@@ -30,6 +30,9 @@ seqLength = 8;
 C = 20;                 
 P = 0.12;          
 rotationInva = false;
+scaleFactor = [linspace(1,2,seqLength-1) 1];
+fourierDescriptor = [];
+fourierDescriptorScaled = [];
 
 files = dir('*_metadata.mat');      
 num_files = length(files);
@@ -41,7 +44,8 @@ for i = 1:num_files
     % detect sequence of length equal or greater than seqLength
     noFrames = sum(double(~cellfun(@isempty,cellCoordinates)),2);
     idx = find(noFrames >= seqLength);
-    fourierDescriptor = cell(100,seqLength); 
+    fouriertemp = cell(100,seqLength+1); 
+    fouriertempScaled = cell(100,seqLength+1);
     count = 1;
     
     for j = 1:size(idx,1)
@@ -51,23 +55,28 @@ for i = 1:num_files
             for m = 1:seqLength
                 canvas = false((metadata.maxRadious*2)+1, (metadata.maxRadious*2)+1);
                 selection = cellCoordinates{idx(j),idx2(k+m-1)};
-                selection(:,1) = wrapTo2Pi(selection(:,1) + rotation);          
+                selection(:,1) = wrapTo2Pi(selection(:,1) + rotation);                
                 [x,y] = pol2cart(selection(:,1),selection(:,2));
-                colSub = round(x)+metadata.maxRadious+1; 
-                rowSub = round(y)+metadata.maxRadious+1;
-                cellIdx = sub2ind(size(canvas), rowSub, colSub);
+                x = round(x)+metadata.maxRadious+1; 
+                y = round(y)+metadata.maxRadious+1;
+                cellIdx = sub2ind(size(canvas), y, x);
                 canvas(cellIdx) = true;
                 canvas = imfill(canvas,'holes');
                 [a,b,c,d,~] = ellipticFourierDescriptor(canvas, C, P, rotationInva);
-                fourierDescriptor{count,m} = [a;b;c;d];
-            end   
-        count = count +1;
+                fouriertemp{count,m} = [a;b;c;d];
+                fouriertempScaled{count,m} = [a;b;c;d] * scaleFactor(m);
+            end
+            fouriertemp{count,end} = canvas;
+            fouriertempScaled{count,end} = canvas;
+            count = count +1;
         end
     end
-    save(strcat(metadata.name,'_fourierDescriptor.mat'),'fourierDescriptor');
+    fourierDescriptor = [fourierDescriptor;fouriertemp];
+    fourierDescriptorScaled = [fourierDescriptorScaled;fouriertempScaled];
     %clearvars -except files num_files i
 end
-
+save(strcat(metadata.name,'fourierDescriptor.mat'),'fourierDescriptor');
+save(strcat(metadata.name,'fourierDescriptorScaled.mat'),'fourierDescriptorScaled');
 
 %% Image reconstruction from Fourier descriptor 
 T = 300; % number of sampling points for reconstruction.

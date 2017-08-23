@@ -97,17 +97,20 @@ Ximg(testIdx,:) = [];
 % retrieve predictions
 Yhat = Ximg(IDX);
 
+
+
 % compare predicted against target shape
 
 
 % plot shapes
-imshowpair(Yimg{1},Yhat{1},'montage');
+figure
+imshowpair(Yimg{4},Yhat{4},'montage');
 
+figure
 toGray = 255 * uint8(Yimg{1});
 toGray2 = 255 * uint8(Yhat{1});
-image = cat(3, grayImage, grayImage, grayImage);
+image = cat(3, toGray, toGray, toGray);
 image(:,:,1) = image(:,:,1) + toGray2;
 image(:,:,2) = image(:,:,2) - toGray2;
 image(:,:,3) = image(:,:,3) - toGray2;
 imshow(image)
-
