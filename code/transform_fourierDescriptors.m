@@ -57,8 +57,11 @@ for i = 1:num_files
                 selection = cellCoordinates{idx(j),idx2(k+m-1)};
                 selection(:,1) = wrapTo2Pi(selection(:,1) + rotation);                
                 [x,y] = pol2cart(selection(:,1),selection(:,2));
+                % including a change in the coordenates system, from origin
+                % [0,0] being center of image to [0,0] being top left image
+                % corner and postive y axis = rows (hence 'y*-1' is needed)
                 x = round(x)+metadata.maxRadious+1; 
-                y = round(y)+metadata.maxRadious+1;
+                y = round(y*-1)+metadata.maxRadious+1;
                 cellIdx = sub2ind(size(canvas), y, x);
                 canvas(cellIdx) = true;
                 canvas = imfill(canvas,'holes');
@@ -79,8 +82,12 @@ save(strcat(metadata.name,'fourierDescriptor.mat'),'fourierDescriptor');
 save(strcat(metadata.name,'fourierDescriptorScaled.mat'),'fourierDescriptorScaled');
 
 %% Image reconstruction from Fourier descriptor 
-T = 300; % number of sampling points for reconstruction.
+
+ % T = number of sampling points for reconstruction. s = step size.
+ % ImgSize = size of reconstructed image [rows, columns].
+T = 300;
 s = 0.1;
-image = inverseFourierDescriptor(a,b,c,d,T,s);
+ImgSize = size(canvas);
+image = inverseFourierDescriptor(a,b,c,d,T,s,ImgSize);
 figure
 imshowpair(canvas,image,'montage');
