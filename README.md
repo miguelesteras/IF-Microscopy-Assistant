@@ -1,24 +1,35 @@
 # IF-Microscopy-Assistant
-## For the analysis and modelling of Immunofluorescence (IF) cell microscopy
+For the analysis and modelling of Immunofluorescence (IF) cell microscopy.<br>
 This project aims to construct a cloud-based service to help with the analysis and morphological modeling in Immunofluorescence cell microscopy.
 <br><br>
-## Code Files
+## MATLAB (R2017a) code
 <br>
--> create_masks.m (MATLAB R2017a) <br>
-Inputs: a .tiff file containing a set of rgb images in which [red channel = nucleus] and [green channel = cytoplasm. <br>
-Output: cell array of rgb images or video frames (uint8), binary mask of single cells, binary mask of cell clusters and binary mask of nucleus. <br><br>
--> create_sequences.m  (MATLAB R2017a) <br>
-Inputs: cell array of rgb images or video frames (uint8) and binary mask of single cells. <br>
-Outputs: cell array [s x f] containg the Pixel Idx List of cell sequences. s = no. unique sequences, f = no. video frames.<br><br>
--> radius_and_rotation.m  (MATLAB R2017a) <br>
-Inputs: cell array containg the Pixel Idx List of cell sequences, binary mask of single cells.<br>
-Outputs: array containing center of mass, array containing coordenate (polar) of contour pixel further away from center of mass, array containing rotation angle needed to point cell up (for each cell in cell sequences).<br><br>
--> transform_fourierDescriptors.m  (MATLAB R2017a) <br>
-Input: cell array containg the Pixel Idx List of cell sequences, binary mask of single cells, and arrays from radius_and_rotation.m script.<br>
-Outputs: training instances, each of them represented by a sequence of fourier vectors (v1, v2, ... , vx), from which input vectors = (v1, v2, ... , vx-1), and target vector = vx.
-<br><br><br><br>
-**Reference**
-<br>
+-> create_masks.m <br>
+Converts a .tiff file containing a set of rgb images in which [red channel = nucleus] and [green channel = cytoplasm, into a cell array of rgb images or video frames (uint8), a binary mask of single cells, a binary mask of cell clusters and a binary mask of nucleus. <br><br>
+
+-> create_sequences.m <br>
+Returns cell array [s x f] containg the Pixel Idx List of each individual cell from the single cell mask. Each row contains a unique sequence of frames of a single cell. No.columns = No.video frames.<br><br>
+
+-> create_InfoArrays.m <br>
+Returns for each cell in cell sequence array; the center of mass, max radius (max rho in polar coord.), angle to rotate max rho pixel north, cotour polar coordinates and cell mask polar coordinates.<br><br>
+
+-> transform_Boundary.m <br>
+Transforms cell mask coordinates into a small set of [x,y] cell contour coordenates of arbitrary size, using the matlab function _boundary_.<br><br>
+
+-> transform_DynamicImage.m
+Transforms cell mask coordenates into a grayscale image containing the contour of the cell from all input frames. The intensity of the pixel contour is homogenious for one frame an increases in time from frame to frame. <br><br>
+
+-> transform_fourierDescriptors.m
+Transform cell mask coordinates into a feature vector containing fourier descriptors (based on code by Tobias Pohlen). <br><br>
+
+-> transform_GFDforKNN.m <br>
+Transform cell contour into Generic Fourier Descriptors (GFD) (based on code by Frederik Kratzert). The GFD form a dictionary of sequences to which the query sequence is matched up using _KNNsearch_.<br><br>
+
+-> transform_RhoDescriptors.m <br>
+Transforms cell contour coordenates into a vector containing the max rho coordinate for the set pixel at specific evenly spaced angles.<br><br>
+
+<br><br>
+## Reference
 This code is part of the project: <br>
 'Tracking of temporally occluded or overlapping structures in live cell microscopy' by Miguel Esteras. <br>
 Department of Computer Science at City, University of London
