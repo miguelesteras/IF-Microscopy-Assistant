@@ -71,12 +71,12 @@ Ytest = Y(:,testIdx);
 X(:,testIdx) = [];
 Y(:,testIdx) = [];
 
-% Create feedforward network with two hidden layer 
-hiddenSizes = [300 300];                          
-ffNet = feedforwardnet(hiddenSizes);     
+% Training feedforward network with two hidden layer 
+hiddenSizes = [300 300200];                          % neurons in hidden layer
+ffNet = feedforwardnet(hiddenSizes);        % create feedforward network
 view(ffNet)
 
-% Hyper-parameters of network
+% Fine-tunning
 ffNet.trainFcn                    = 'trainoss';     % One-step secant backpropagation
 ffNet.divideFcn                   = 'dividerand';   % data division random
 ffNet.divideParam .trainRatio     = 0.9;              % all data used for training
@@ -89,7 +89,6 @@ ffNet.trainParam.max_fail         = 10;             % maximum validation failure
 ffNet.trainParam.show             = 1;              % Epochs between displays
 tic;                                                % start timer
 
-% train network on data
 [ffNet,FFrecord] = train(ffNet,X,Y);
 sprintf('Training time: %0.0f %s',toc,'s')          % duration of training
 

@@ -74,12 +74,14 @@ for i = 1:num_files
             count = count +1;
         end
     end
+    %save(strcat(metadata.name,'_fourierDescriptor.mat'),'fourierDescriptor');
+    %save(strcat(metadata.name,'_fourierDescriptorScaled.mat'),'fourierDescriptorScaled');
+
     fourierDescriptor = [fourierDescriptor;fouriertemp];
     fourierDescriptorScaled = [fourierDescriptorScaled;fouriertempScaled];
-    %clearvars -except files num_files i
 end
-save(strcat(metadata.name,'fourierDescriptor.mat'),'fourierDescriptor');
-save(strcat(metadata.name,'fourierDescriptorScaled.mat'),'fourierDescriptorScaled');
+save('fourierDescriptor.mat','fourierDescriptor');
+save('fourierDescriptorScaled.mat','fourierDescriptorScaled');
 
 %% Image reconstruction from Fourier descriptor 
 

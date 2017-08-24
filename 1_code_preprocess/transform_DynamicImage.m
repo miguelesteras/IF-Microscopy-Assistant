@@ -14,6 +14,7 @@
 
 % Number of frames in learning sequence (x input + 1 target)
 seqLength = 8; 
+dynamicImages = [];
 
 files = dir('*_metadata.mat');      
 num_files = length(files);
@@ -25,7 +26,7 @@ for i = 1:num_files
     % detect sequence of length equal or greater than seqLength
     noFrames = sum(double(~cellfun(@isempty,cellCoordinates)),2);
     idx = find(noFrames >= seqLength);
-    dynamicImages = cell(100,2); 
+    tempDynamic = cell(100,2); 
     count = 1;
     
     % the black canvas where to draw the dynamic image has dimensions given
@@ -54,34 +55,34 @@ for i = 1:num_files
                 input(contour) = 15*m;
                 m = m+1;
             end
-            dynamicImages{count,1} = mat2gray(input);
+            tempDynamic{count,1} = mat2gray(input);
             target = int8(zeros((metadata.maxRadious*2)+1, (metadata.maxRadious*2)+1));
             canvas = false((metadata.maxRadious*2)+1, (metadata.maxRadious*2)+1);
             selection = cellCoordinates{idx(j),idx2(k+m-1)};
             selection(:,1) = selection(:,1) + rotation;          
             [x,y] = pol2cart(selection(:,1),selection(:,2));
             colSub = round(x)+metadata.maxRadious+1; 
-            rowSub = round(y)+metadata.maxRadious+1;
+            rowSub = round(y*-1)+metadata.maxRadious+1;
             cellIdx = sub2ind(size(canvas), rowSub, colSub);
             canvas(cellIdx) = true;
             SE = strel('disk',2);
             contour = bwmorph(imopen(imfill(canvas,'holes'),SE),'remove');
             target(contour) = 25*m;
-            dynamicImages{count,2} = mat2gray(target);
+            tempDynamic{count,2} = mat2gray(target);
             count = count+1;
         end               
     end
-    save(strcat(metadata.name,'_dynamicImages.mat'),'dynamicImages');     
-    
-    clearvars -except files num_files i
+    dynamicImages = [dynamicImages ; tempDynamic];
+    save(strcat(metadata.name,'_dynamicImages.mat'),'tempDynamic');
 end
+save('dynamicImages.mat','dynamicImages');     
 
 %% Plots
 
-canvas = cat(3, dynamicImages{1,1}, dynamicImages{1,1}, dynamicImages{1,1});
-canvas(:,:,1) = canvas(:,:,1) + dynamicImages{1,2};
-canvas(:,:,2) = canvas(:,:,2) - dynamicImages{1,2};
-canvas(:,:,3) = canvas(:,:,3) - dynamicImages{1,2};
+canvas = cat(3, dynamicImages{5,1}, dynamicImages{5,1}, dynamicImages{5,1});
+canvas(:,:,1) = canvas(:,:,1) + dynamicImages{5,2};
+canvas(:,:,2) = canvas(:,:,2) - dynamicImages{5,2};
+canvas(:,:,3) = canvas(:,:,3) - dynamicImages{5,2};
 imshow(canvas)
 
 %% Transform into gradients

@@ -1,4 +1,4 @@
-%% Phase 5.7. Train KNN with Generic Fourier descriptors (GFD)
+%% Phase 4.7. Transform cell mask coordinates into Generic Fourier descriptors (GFD)
 %   ======================================================================
 %   Code by Miguel Esteras-Bejar, 07/2017
 %   This code is part of the project:
@@ -7,7 +7,7 @@
 %   This codes aims to:
 %   1. Extract sequences of frames (f1, f2, ... , fx), from which
 %   input sequence = (f1, f2, ... , fx-1), and target sequence = fx
-%   2. Transform cell contour into GFD. Code by Frederik Kratzert
+%   2. Transform cell coordinates into GFD. Code by Frederik Kratzert
 %   https://uk.mathworks.com/matlabcentral/fileexchange/52643-fd-=-gfd-bw-m-n--implementation-of-the-generic-fourier-descriptors
 %   Binary image centered using centerobject funtion by Frederik Kratzert. 
 %   ======================================================================
@@ -73,47 +73,7 @@ for i = 1:num_files
     end
     GFDDescriptors = [GFDDescriptors;GFDtemp];
     GFDDescriptorsScaled = [GFDDescriptorsScaled;GFDtemp2];
-
-    %clearvars -except files num_files i GFDDescriptor seqLength M N
 end
 
 save('GFDDescriptors.mat','GFDDescriptors');     
 save('GFDDescriptorsScaled.mat','GFDDescriptorsScaled');     
-
-%% K-Nearest Neighbours search using stored GFD sequences
-
-% create training and query set.
-X = GFDDescriptorsScaled(:,1:seqLength-1);
-X = cell2mat(cellfun(@transpose,X,'UniformOutput',0));
-Ximg = GFDDescriptorsScaled(:,end);
-
-testRatio = .15;
-testIdx = randi([1 size(X,1)],1,round(size(X,1)*testRatio));
-Y = X(testIdx,:);         
-Yimg = Ximg(testIdx,:);
-X(testIdx,:) = [];
-Ximg(testIdx,:) = [];
-
-% look up amoung all stored sequences (X) the NN of each observation in Y
-[IDX,D] = knnsearch(X,Y,'NSMethod','exhaustive', 'Distance', 'euclidean');
-
-% retrieve predictions
-Yhat = Ximg(IDX);
-
-
-
-% compare predicted against target shape
-
-
-% plot shapes
-figure
-imshowpair(Yimg{4},Yhat{4},'montage');
-
-figure
-toGray = 255 * uint8(Yimg{1});
-toGray2 = 255 * uint8(Yhat{1});
-image = cat(3, toGray, toGray, toGray);
-image(:,:,1) = image(:,:,1) + toGray2;
-image(:,:,2) = image(:,:,2) - toGray2;
-image(:,:,3) = image(:,:,3) - toGray2;
-imshow(image)

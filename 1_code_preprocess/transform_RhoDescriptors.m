@@ -18,7 +18,8 @@ seqLength = 8;             % Number of frames in learning sequence (x input + 1 
 vecSize   = 32;            % Descriptor vector size
 refAngles = linspace(0,2*pi,vecSize+1);
 refAngles = refAngles(1:end-1);
-                
+RhoDescriptors = [];
+
 files = dir('*_metadata.mat');      
 num_files = length(files);
 for i = 1:num_files
@@ -29,7 +30,7 @@ for i = 1:num_files
     % detect sequence of length equal or greater than seqLength
     noFrames = sum(double(~cellfun(@isempty,contourCoordinates)),2);
     idx = find(noFrames >= seqLength);
-    RhoDescriptors = cell(100,seqLength); 
+    tempRhoDesc = cell(100,seqLength); 
     count = 1;
     
     for j = 1:size(idx,1)
@@ -46,15 +47,15 @@ for i = 1:num_files
                     [~,idx3] = min(abs(selection(:,1)-refAngles(n)));
                     rhoDescriptor(n,1) = selection(idx3,2);
                 end                    
-                RhoDescriptors{count,m} = rhoDescriptor;
+                tempRhoDesc{count,m} = rhoDescriptor;
             end           
             count = count+1;
         end               
-    end    
-    save(strcat(metadata.name,'_RhoDescriptors.mat'),'RhoDescriptors');
-    
-    %clearvars -except files num_files i
+    end
+    %save(strcat(metadata.name,'_RhoDescriptors.mat'),'tempRhoDesc');
+    RhoDescriptors = [RhoDescriptors;tempRhoDesc];
 end
+save('RhoDescriptors.mat','RhoDescriptors');   
 
 %% 
 % figure
