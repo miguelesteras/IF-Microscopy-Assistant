@@ -15,24 +15,29 @@
 % Load all tiff files in working directory and store video frames as cell
 % array
 
-files = dir('*.tif');      % read tiff videos from folder
+% read tiff videos from folder
+files = dir('*.tif');      
 num_files = length(files);
 
 for k = 1:num_files
-    tiffInfo = imfinfo(files(k).name);  % tiff file inforamtion
-    no_frames = numel(tiffInfo);        % number of images in tiff file
-    movie = cell(no_frames,1);           % create cell array to contain video frames
+    % extract tiff file information, including number of frames. Create an
+    % empty cell array to store all video frames
+    tiffInfo = imfinfo(files(k).name);  
+    no_frames = numel(tiffInfo);        
+    movie = cell(no_frames,1);           
     
     for i = 1:no_frames
         I=imread(files(k).name,i);
         movie{i}=I;    
     end
     
+    % save movie to disk as matlab variable.  
     [~,name,~] = fileparts(files(k).name);
-    name(~ismember(name,['0':'9' 'a':'z' 'A':'Z'])) = '';  % Remove characters using ismember
-    save(strcat(name,'_movie.mat'),'movie');               % save movie to disk as matlab variable 
+    name(~ismember(name,['0':'9' 'a':'z' 'A':'Z'])) = '';
+    save(strcat(name,'_movie.mat'),'movie');               
     
-    metadata = struct('name',name,...       % record experiment metadata
+    % record experiment metadata and save it as matlab variable
+    metadata = struct('name',name,...       
                     'imageSize', [],...
                     'minCellArea', [],...    
                     'maxCellArea', [],...
@@ -42,8 +47,8 @@ for k = 1:num_files
                     'maxNucArea', [],...
                     'nucleusMedian', []);  
                   
-    save(strcat(name,'_metadata.mat'),'metadata');  % save metadata variable 
-    
+    save(strcat(name,'_metadata.mat'),'metadata'); 
+    clearvars -except files num_files k
 end
 
 clear; clc;

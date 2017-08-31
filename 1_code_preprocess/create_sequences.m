@@ -40,20 +40,27 @@ for i = 1:num_files
     end
             
     for k = 2:size(fullCellLocation,1)  % from second frame onwards
-        preSeq = find(~cellfun(@isempty,cellSequences(:,k-1)));
-        prior = cellSequences(preSeq,k-1);
-        
-        for m = 1:size(fullCellLocation{k},2)   % for every cell in frame
-            object = fullCellLocation{k}(m);
-            object = repmat(object,[size(prior,1) 1]);
-            simil = cellfun('length',cellfun(@intersect, prior, object, 'UniformOutput', false));
-            [value, idx] = max(simil);          % most similar cell in previous frame
-            
-            if value > size(fullCellLocation{k}{m})*0.6    % if cell has > 60% similar location
-                cellSequences{preSeq(idx),k} = fullCellLocation{k}{m};  % add cell to the sequence
-            else
-                cellSequences{seqCount,k} = fullCellLocation{k}{m};     % if cell does not match start new sequence
-                seqCount = seqCount + 1;
+        if isempty(fullCellLocation{k})
+            continue
+        else
+            preSeq = find(~cellfun(@isempty,cellSequences(:,k-1)));
+            prior = cellSequences(preSeq,k-1);
+
+            for m = 1:size(fullCellLocation{k},2)   % for every cell in frame
+                object = fullCellLocation{k}(m);
+                object = repmat(object,[size(prior,1) 1]);
+                simil = cellfun('length',cellfun(@intersect, prior, object, 'UniformOutput', false));
+                [value, idx] = max(simil);          % most similar cell in previous frame
+                
+                % if cell does not match previous => 60% location 
+                % similarity or previous frame is empty start new sequence:
+                if isempty(simil) || value < size(fullCellLocation{k}{m},1)*0.6
+                    cellSequences{seqCount,k} = fullCellLocation{k}{m};
+                    seqCount = seqCount + 1;
+                % else add cell to a previous sequence
+                else    
+                    cellSequences{preSeq(idx),k} = fullCellLocation{k}{m};                      
+                end
             end
         end
     end

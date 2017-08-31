@@ -41,7 +41,7 @@ for i = 1:num_files
         stats = regionprops(image,'centroid','PixelList');  
         center = round(stats.Centroid);  
         centerMass{index(j)} = center;
-        coordenates = stats.PixelList - center;
+        coordenates = stats.PixelList - ones(size(stats.PixelList))*diag(center);
         [theta, rho] = cart2pol(coordenates(:,1),coordenates(:,2)); 
         cellCoordinates{index(j)} = [wrapTo2Pi(theta) rho];
         [~, idx] = max(rho);
@@ -51,7 +51,7 @@ for i = 1:num_files
         SE = strel('disk',2);
         contour = bwmorph(imopen(image,SE),'remove');       
         stats2 = regionprops(contour,'PixelList');       
-        carteCoordenates = stats2.PixelList - center;      
+        carteCoordenates = stats2.PixelList - ones(size(stats2.PixelList))*diag(center);      
         [theta, rho] = cart2pol(carteCoordenates(:,1),carteCoordenates(:,2));
         contourCoordinates{index(j)} = [wrapTo2Pi(theta) rho];
 
