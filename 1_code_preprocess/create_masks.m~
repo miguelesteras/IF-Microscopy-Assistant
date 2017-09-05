@@ -86,15 +86,14 @@ for k = 1:num_files
         red_channel{i} = red;       
         nucleus_count{i} = cellfun('length',nucleus.PixelIdxList);
     end
-    % set min and max area of nucleus (20% smallest removed) and store
-    % information on metadata file. 
-    nucAreas = sort(cell2mat(nucleus_count')); 
+    % set min area of nucleus (20% smallest removed)
+    nucAreas = sort(cell2mat(nucleus_count'));  % sort nucleus area values 
     idx = round(size(nucAreas,2)/10);
-    minNucArea = nucAreas(2*idx);              
-    maxNucArea = nucAreas(end);               
+    minNucArea = nucAreas(2*idx);             % set min area of nucleus (20% smallest removed) 
+    maxNucArea = nucAreas(end);               % set max area of nucleus (optional)
     nucleusMedian = median(nucAreas(3*idx:end));
     %histogram(nucAreas)
-    metadata.imageSize = nucleus.ImageSize;
+    metadata.imageSize = nucleus.ImageSize; % add info to metadata file
     metadata.minNucArea = minNucArea;    
     metadata.maxNucArea = maxNucArea;
     metadata.nucleusMedian = nucleusMedian;
@@ -110,6 +109,10 @@ for k = 1:num_files
         nucleusMask{j} = frame;                     % store nulceus binary mask 
         nucleusContour{j} = contour;                % store nucleus binary contour
     end
+    
+    save(strcat(metadata.name,'_nucleusInfo.mat'),'nucleusInfo');   % save variables in disk
+    save(strcat(metadata.name,'_nucleusMask.mat'),'nucleusMask');
+    save(strcat(metadata.name,'_nucleusContour.mat'),'nucleusContour');    
     
     %% Detect cells and create a binary mask
        
@@ -163,10 +166,7 @@ for k = 1:num_files
         end        
     end
     % save variables into disk
-    save(strcat(metadata.name,'_movieReduced.mat'),'movie');
-    save(strcat(metadata.name,'_nucleusInfo.mat'),'nucleusInfo');
-    save(strcat(metadata.name,'_nucleusMask.mat'),'nucleusMask');
-    save(strcat(metadata.name,'_nucleusContour.mat'),'nucleusContour');    
+    save(strcat(metadata.name,'_movieReduced.mat'),'movie');     
     save(strcat(metadata.name,'_cellMask.mat'),'cellMask');     
     save(strcat(metadata.name,'_cellInfo.mat'),'cellInfo');
     save(strcat(metadata.name,'_singleCellArea.mat'),'singleCellArea');

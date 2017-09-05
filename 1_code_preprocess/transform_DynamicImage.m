@@ -67,7 +67,7 @@ for i = 1:num_files
             canvas(cellIdx) = true;
             SE = strel('disk',2);
             contour = bwmorph(imopen(imfill(canvas,'holes'),SE),'remove');
-            target(contour) = 25*m;
+            target(contour) = 255;
             tempDynamic{count,2} = mat2gray(target);
             count = count+1;
         end               

@@ -16,6 +16,6 @@ function [image] = inverseFourierDescriptor(a,b,c,d,T,s,ImgSize)
     x2 = round(real(pl)*scaleF)';
     y2 = round(imag(pl)*scaleF*-1)';
     ind2 = sub2ind(ImgSize, y2+( (ImgSize(1)/2) + 1), x2+( (ImgSize(2)/2) + 1));
-    image = false(200,200);
+    image = false(ImgSize);
     image(ind2) = true;
 end

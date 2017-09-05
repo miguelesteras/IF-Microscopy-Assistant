@@ -9,7 +9,7 @@
 %   input sequence = (f1, f2, ... , fx-1), and target sequence = fx
 %   2. Transform cell contour into a descriptor vecctor containing the rho
 %   value for a given number of contour pixels (distance from center, in 
-%   the polar coordenate system).
+%   the polar coordinate system).
 %   ======================================================================
 
 %% Build data set of single cells
