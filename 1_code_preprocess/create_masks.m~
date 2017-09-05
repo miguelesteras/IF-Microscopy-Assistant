@@ -86,104 +86,105 @@ for k = 1:num_files
         red_channel{i} = red;       
         nucleus_count{i} = cellfun('length',nucleus.PixelIdxList);
     end
-    % set min area of nucleus (20% smallest removed)
-    nucAreas = sort(cell2mat(nucleus_count'));  % sort nucleus area values 
+    % set min and max area of nucleus (20% smallest removed) and store
+    % information on metadata file. 
+    nucAreas = sort(cell2mat(nucleus_count')); 
     idx = round(size(nucAreas,2)/10);
-    minNucArea = nucAreas(2*idx);             % set min area of nucleus (20% smallest removed) 
-    maxNucArea = nucAreas(end);               % set max area of nucleus (optional)
+    minNucArea = nucAreas(2*idx);              
+    maxNucArea = nucAreas(end);               
     nucleusMedian = median(nucAreas(3*idx:end));
     %histogram(nucAreas)
-    metadata.imageSize = nucleus.ImageSize; % add info to metadata file
+    metadata.imageSize = nucleus.ImageSize;
     metadata.minNucArea = minNucArea;    
     metadata.maxNucArea = maxNucArea;
     metadata.nucleusMedian = nucleusMedian;
     
-    nucleusInfo = cell(size(red_channel,1),1);      % cell array with nucleus area and location info
-    nucleusMask = cell(size(red_channel,1),1);      % cell array with nucleus mask
-    nucleusContour = cell(size(red_channel,1),1);   % cell array with nucleus contour
+    % create cell arrays with nucleus count, area and location
+    % (nucleusInfo), and nucleus binary mask (nucleusMask).
+    nucleusInfo = cell(size(red_channel,1),1);     
+    nucleusMask = cell(size(red_channel,1),1);      
     
+    % nucleus included in binary mask are thresholded by min and max values
+    % calculated before.
     for j = 1:size(red_channel,1)
-        frame = bwareafilt(red_channel{j},[minNucArea maxNucArea]);  % remove small and large objects
-        contour = bwmorph(frame,'remove');
-        nucleusInfo{j} = bwconncomp(frame);         % detect connected components
-        nucleusMask{j} = frame;                     % store nulceus binary mask 
-        nucleusContour{j} = contour;                % store nucleus binary contour
+        frame = bwareafilt(red_channel{j},[minNucArea maxNucArea]);  
+        nucleusInfo{j} = bwconncomp(frame);         
+        nucleusMask{j} = frame;                      
     end
     
-    save(strcat(metadata.name,'_nucleusInfo.mat'),'nucleusInfo');   % save variables in disk
-    save(strcat(metadata.name,'_nucleusMask.mat'),'nucleusMask');
-    save(strcat(metadata.name,'_nucleusContour.mat'),'nucleusContour');    
-    
     %% Detect cells and create a binary mask
-       
-    cellInfo        = cell(size(movie,1),1);    % initialize record for cells and region properties
-    singleCellArea  = cell(size(movie,1),1);    % initialize record for areas of single cells
-    cellMask        = cell(size(movie,1),1);    % initialize mask containing all cells in frame
-    singleCellMask  = cell(size(movie,1),1);    % initialize mask for single cells
-    clusterMask     = cell(size(movie,1),1);    % initialize mask for clusters of cells
-    singleCellContour = cell(size(movie,1),1);  % initialize mask for single cells contour
-    clusterContour  = cell(size(movie,1),1);    % initialize mask for cluster of cells contour
     
-    for m = 1:size(movie,1)
-        green = imbinarize(movie{m}(:,:,2),...  % binarize using Otsu's threshold method
-            'adaptive',...     
-            'ForegroundPolarity','bright',...
-            'Sensitivity',0.2); 
-        
-        se = strel('disk',4);
-        green = imopen(imfill(green,'holes'), se);      % fill holes and morphological opening
-        [r, c] = find(nucleusMask{m}==1);               % list of coordenates of nucleus pixels
-        selection = bwselect(green,c,r,8);              % cellmask regions overlapping with nucleus
-        selection = imfill(selection,'holes');          % fill holes in each binary region
-        cellMask{m} = selection;                            % record cell mask
-        
-        labelNucleus = labelmatrix(nucleusInfo{m});             % label nucleus mask
-        G = uint8(selection);                                   % convert binary to grayscale
-        G(nucleusMask{m}) = (labelNucleus(nucleusMask{m}))+1;   % add nucleus labels (1 not included) to cell image
-        %collage = label2rgb(G);                                % collage segmented cells + nucleus
-        
-        CC = bwconncomp(selection);
-        cellInfo{m} = CC;                                   % record cell info
-        labelCells = labelmatrix(CC);                       % label cell mask
-        
-        singleCellMask{m} = false(size(selection)); % intialize masks as empty binary image
-        clusterMask{m} = false(size(selection));
-        
-        for p = 1:max(max(labelCells))              
-            if size(unique(G(labelCells==p)),1) == 2            % a single nucleus in connected cell region       
-               singleCellMask{m} = or(singleCellMask{m},labelCells==p);
-            elseif size(unique(G(labelCells==p)),1) > 2         % more than two nucleus in connected cell region
-               clusterMask{m} = or(clusterMask{m},labelCells==p);
-            end 
-            
-        sContour = bwmorph(singleCellMask{m},'remove');     % record contour of cells
-        singleCellContour{m} = sContour;
-        CCC = bwconncomp(singleCellMask{m});
-        singleCellArea{m} = cellfun('length',CCC.PixelIdxList);    % record single cell area info
+    % Initialize cell arrays to contain the binary 
+    cellInfo        = cell(size(movie,1),1);   
+    singleCellArea  = cell(size(movie,1),1);   
+    cellMask        = cell(size(movie,1),1);   
+    singleCellMask  = cell(size(movie,1),1);   
+    clusterMask     = cell(size(movie,1),1);   
 
-        cContour = bwmorph(clusterMask{m},'remove');
-        clusterContour{m} = cContour;
+    for m = 1:size(movie,1)
+        % binarize using Otsu's threshold method
+        green = imbinarize(movie{m}(:,:,2),'adaptive','ForegroundPolarity','bright','Sensitivity',0.2); 
+        % fill holes and morphological opening
+        se = strel('disk',2);
+        green = imopen(imfill(green,'holes'), se);
+        % foreground regions in the binary cellmask regions that overlap
+        % with foreground pixels in the binary nucleus mask are selected as
+        % containing a cell structure
+        [r, c] = find(nucleusMask{m}==1);               
+        selection = bwselect(green,c,r,8);              
+        selection = imfill(selection,'holes');          
+        cellMask{m} = selection;  
+        CC = bwconncomp(selection);
+        cellInfo{m} = CC;                                   
+        %labelCells = labelmatrix(CC);                       
+        
+        % label nucleus mask, and add labels to cell mask to create a
+        % collage of segmented cells and nucleus. This composed image will
+        % be used to divide single cells from cell clusters
+        labelNucleus = labelmatrix(nucleusInfo{m});             
+        G = uint8(selection);                                   
+        G(nucleusMask{m}) = (labelNucleus(nucleusMask{m}))+1;   
+        %collage = label2rgb(G);                             
+              
+        % intialize masks as empty binary image
+        singleCellMask{m} = false(size(selection)); 
+        clusterMask{m} = false(size(selection));
+        % a single nucleus in a connected cell region = single cell
+        % more than two nucleus in connected cell region = cell cluster
+        for p = 1:max(max(labelCells))              
+            if size(unique(G(labelCells==p)),1) == 2                 
+               singleCellMask{m} = or(singleCellMask{m},labelCells==p);
+            elseif size(unique(G(labelCells==p)),1) > 2         
+               clusterMask{m} = or(clusterMask{m},labelCells==p);
+            end       
+        % record single cell area info. Later used to identified cell in
+        % partial or full view (due to changes in depth). 
+        CCC = bwconncomp(singleCellMask{m});
+        singleCellArea{m} = cellfun('length',CCC.PixelIdxList);   
         end        
     end
     % save variables into disk
-    save(strcat(metadata.name,'_movieReduced.mat'),'movie');     
+    save(strcat(metadata.name,'_movieReduced.mat'),'movie');
+    save(strcat(metadata.name,'_nucleusInfo.mat'),'nucleusInfo');
+    save(strcat(metadata.name,'_nucleusMask.mat'),'nucleusMask');
     save(strcat(metadata.name,'_cellMask.mat'),'cellMask');     
     save(strcat(metadata.name,'_cellInfo.mat'),'cellInfo');
     save(strcat(metadata.name,'_singleCellArea.mat'),'singleCellArea');
     save(strcat(metadata.name,'_singleCellMask.mat'),'singleCellMask');
     save(strcat(metadata.name,'_clusterMask.mat'),'clusterMask');
-    save(strcat(metadata.name,'_singleCellContour.mat'),'singleCellContour');
-    save(strcat(metadata.name,'_clusterContour.mat'),'clusterContour');
     
     %% average cell size
 
+    % remove outliers (10% smallest and biggest), then select mode bin from
+    % biggest half. Set min area as the edge of two bins smaller from the
+    % mode bin.
     cellAreas = sort(cell2mat(singleCellArea'));         
     idx = round(size(cellAreas,2)/10);
-    cellAreas = cellAreas(idx:end-idx);     % remove 10% smallest and biggest
-    [N,edges] = histcounts(cellAreas,8);    % put areas in 6 bins
-    [~,id] = max(N(5:8));                   % select mode bin from half biggest
-    minCellArea = edges(2+id);              % set min area as the edge of two bins smaller than the mode bin 
-    maxCellArea = cellAreas(end);           % set max area of nucleus
+    cellAreas = cellAreas(idx:end-idx);     
+    [N,edges] = histcounts(cellAreas,8);    
+    [~,id] = max(N(5:8));                   
+    minCellArea = edges(2+id);               
+    maxCellArea = cellAreas(end);           
     cellMedian = median(cellAreas(sum(N(1:1+id))+1:end));
     %histogram(cellAreas)
     metadata.minCellArea = minCellArea;
@@ -191,7 +192,7 @@ for k = 1:num_files
     metadata.cellMedian = cellMedian;
     metadata.cellNumbers = sum(N);
                   
-    save(strcat(metadata.name,'_metadata.mat'),'metadata');     % save metadata file on disk
+    save(strcat(metadata.name,'_metadata.mat'),'metadata'); 
     
     clearvars -except files num_files k
     
