@@ -13,9 +13,9 @@ function [image] = inverseFourierDescriptor(a,b,c,d,T,s,ImgSize)
     end
     addX = ceil(ImgSize(2)/2);
     addY = ceil(ImgSize(1)/2);
-    scaleF = 17;
+    scaleF = 21;
     x2 = round(real(pl)*scaleF)';
-    y2 = round(imag(pl)*scaleF)';
+    y2 = floor(imag(pl)*scaleF)';
     ind2 = sub2ind(ImgSize, y2+addY, x2+addX);
     image = false(ImgSize);
     image(ind2) = true;

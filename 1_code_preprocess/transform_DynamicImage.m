@@ -15,7 +15,7 @@
 % Number of frames in learning sequence (seqLength). Construct square
 % grayscale image of size doble the maximum radius of cells (maxRad).
 seqLength = 8; 
-intScale = linspace(20,200,seqLength-1);
+intScale = linspace(20,120,seqLength-1);
 dynamicImages = [];
 maxRad = 40;
 
@@ -51,8 +51,10 @@ for i = 1:num_files
                 % corner and postive y axis = rows (hence 'y*-1' is needed)
                 colSub = round(x)+(maxRad+1); 
                 rowSub = round(y*-1)+(maxRad+1);
-                colSub(colSub>(maxRad*2)+1) = (maxRad*2)+1;
-                rowSub(rowSub>(maxRad*2)+1) = (maxRad*2)+1;
+                colSub(colSub>(maxRad*2)+1) = (maxRad*2);
+                rowSub(rowSub>(maxRad*2)+1) = (maxRad*2);
+                colSub(colSub<1) = 1;
+                rowSub(rowSub<1) = 1;
                 cellIdx = sub2ind(size(canvas), rowSub, colSub);
                 canvas(cellIdx) = true;
                 SE = strel('disk',2);
@@ -70,6 +72,8 @@ for i = 1:num_files
             rowSub = round(y*-1)+(maxRad+1);
             colSub(colSub>(maxRad*2)+1) = (maxRad*2)+1;
             rowSub(rowSub>(maxRad*2)+1) = (maxRad*2)+1;
+            colSub(colSub<1) = 1;
+            rowSub(rowSub<1) = 1;
             cellIdx = sub2ind(size(canvas), rowSub, colSub);
             canvas(cellIdx) = true;
             SE = strel('disk',2);
@@ -86,15 +90,16 @@ save('dynamicImages.mat','dynamicImages');
 
 %% Plots
 
-canvas = cat(3, tempDynamic{5,1}, tempDynamic{5,1}, tempDynamic{5,1});
+n = 1;
+canvas = cat(3, tempDynamic{n,1}, tempDynamic{n,1}, tempDynamic{n,1});
 figure;
 imshow(canvas)
-canvas(:,:,1) = canvas(:,:,1) + tempDynamic{5,2};
-canvas(:,:,2) = canvas(:,:,2) - tempDynamic{5,2};
-canvas(:,:,3) = canvas(:,:,3) - tempDynamic{5,2};
+canvas(:,:,1) = canvas(:,:,1) + tempDynamic{n,2};
+canvas(:,:,2) = canvas(:,:,2) - tempDynamic{n,2};
+canvas(:,:,3) = canvas(:,:,3) - tempDynamic{n,2};
 figure;
 imshow(canvas)
-output = canvas;
-output(output<1) = 0;
+output = cat(3, tempDynamic{n,2}, zeros(size(tempDynamic{n,2}),'like',tempDynamic{n,2}),...
+                                    zeros(size(tempDynamic{n,2}),'like',tempDynamic{n,2}));
 figure;
 imshow(output)

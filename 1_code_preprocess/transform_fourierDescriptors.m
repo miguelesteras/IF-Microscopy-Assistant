@@ -27,12 +27,12 @@
 % transform (in percentage of total number of points). The transformation
 % is set not to be rotation invariant.
 seqLength = 8;              
-C = 20;                 
-P = 0.12;          
+C = 4;                 
+P = 0.5;          
 rotationInva = false;
-scaleFactor = [linspace(1,2,seqLength-1) 1];
+%scaleFactor = [linspace(1,2,seqLength-1) 1];
 fourierDescriptor = [];
-fourierDescriptorScaled = [];
+%fourierDescriptorScaled = [];
 
 files = dir('*_metadata.mat');      
 num_files = length(files);
@@ -67,10 +67,10 @@ for i = 1:num_files
                 canvas = imfill(canvas,'holes');
                 [a,b,c,d,~] = ellipticFourierDescriptor(canvas, C, P, rotationInva);
                 fouriertemp{count,m} = [a;b;c;d];
-                fouriertempScaled{count,m} = [a;b;c;d] * scaleFactor(m);
+                %fouriertempScaled{count,m} = [a;b;c;d] * scaleFactor(m);
             end
             fouriertemp{count,end} = canvas;
-            fouriertempScaled{count,end} = canvas;
+            %fouriertempScaled{count,end} = canvas;
             count = count +1;
         end
     end
@@ -78,11 +78,10 @@ for i = 1:num_files
     %save(strcat(metadata.name,'_fourierDescriptorScaled.mat'),'fourierDescriptorScaled');
 
     fourierDescriptor = [fourierDescriptor;fouriertemp];
-    fourierDescriptorScaled = [fourierDescriptorScaled;fouriertempScaled];
+    %fourierDescriptorScaled = [fourierDescriptorScaled;fouriertempScaled];
 end
-save('fourierDescriptor.mat','fourierDescriptor');
-save('fourierDescriptorScaled.mat','fourierDescriptorScaled');
-
+save('fourierDescriptorC4.mat','fourierDescriptor');
+%save('fourierDescriptorScaled.mat','fourierDescriptorScaled');
 
 %% Image Reconstruction Plots
 
@@ -91,10 +90,10 @@ save('fourierDescriptorScaled.mat','fourierDescriptorScaled');
 T = 300;
 s = 0.5;
 ImgSize = size(canvas);
-C = [1 2 3 4 5 6 8 10];
+C = [1 2 4 6 8 10 30];
 
 for i = 1:numel(C)
-    [a,b,c,d,~] = ellipticFourierDescriptor(canvas, C(i), P, rotationInva);
+    [a,b,c,d,~] = ellipticFourierDescriptor(canvas, C(i), 0.5, rotationInva);
     I = inverseFourierDescriptor(a,b,c,d,T,s,ImgSize);        
     [B, L] = bwboundaries(I);
     red = zeros(ImgSize);
@@ -104,5 +103,5 @@ for i = 1:numel(C)
     RGBimage(:,:,2) = RGBimage(:,:,2) - red;
     RGBimage(:,:,3) = RGBimage(:,:,3) - red;
     figure
-    imshow(RGBimage) 
+    imshow(RGBimage);
 end
