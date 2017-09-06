@@ -83,13 +83,26 @@ end
 save('fourierDescriptor.mat','fourierDescriptor');
 save('fourierDescriptorScaled.mat','fourierDescriptorScaled');
 
-%% Image reconstruction from Fourier descriptor 
 
- % T = number of sampling points for reconstruction. s = step size.
- % ImgSize = size of reconstructed image [rows, columns].
+%% Image Reconstruction Plots
+
+% T = number of sampling points for reconstruction. s = step size.
+% ImgSize = size of reconstructed image [rows, columns]. 
 T = 300;
-s = 0.1;
+s = 0.5;
 ImgSize = size(canvas);
-image = inverseFourierDescriptor(a,b,c,d,T,s,ImgSize);
-figure
-imshowpair(canvas,image,'montage');
+C = [1 2 3 4 5 6 8 10];
+
+for i = 1:numel(C)
+    [a,b,c,d,~] = ellipticFourierDescriptor(canvas, C(i), P, rotationInva);
+    I = inverseFourierDescriptor(a,b,c,d,T,s,ImgSize);        
+    [B, L] = bwboundaries(I);
+    red = zeros(ImgSize);
+    red(L==1) = 255;
+    RGBimage = double(cat(3, imcomplement(canvas), imcomplement(canvas), imcomplement(canvas)));
+    RGBimage(:,:,1) = RGBimage(:,:,1) + red;
+    RGBimage(:,:,2) = RGBimage(:,:,2) - red;
+    RGBimage(:,:,3) = RGBimage(:,:,3) - red;
+    figure
+    imshow(RGBimage) 
+end

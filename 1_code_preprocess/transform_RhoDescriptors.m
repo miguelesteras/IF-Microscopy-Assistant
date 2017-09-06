@@ -12,10 +12,10 @@
 %   the polar coordinate system).
 %   ======================================================================
 
-%% Build data set of single cells
-
-seqLength = 8;             % Number of frames in learning sequence (x input + 1 target)
-vecSize   = 32;            % Descriptor vector size
+% Number of frames in learning sequence (seqLength) and descriptor vector
+% size (vecSize).
+seqLength = 8;            
+vecSize   = 16;            
 refAngles = linspace(0,2*pi,vecSize+1);
 refAngles = refAngles(1:end-1);
 RhoDescriptors = [];
@@ -57,18 +57,28 @@ for i = 1:num_files
 end
 save('RhoDescriptors.mat','RhoDescriptors');   
 
-%% 
-% figure
-% selection = contourCoordenates{3,1};
-% rotation = rotationUp{3,1};
-% 
-% polarplot(selection(:,1),selection(:,2)); hold on
-% % selection2 = [wrapTo2Pi(selection(:,1) + rotation) selection(:,2)];
-% polarplot(selection2(:,1),selection2(:,2));
-% selection3 = [wrapTo2Pi(selection(:,1) + rotation - pi/2)  selection(:,2)];
-% polarplot(selection3(:,1),selection3(:,2));
+%% Plots
+% rotation = -5.977;
+% selection = contourCoordinates{idx(2),idx2(2)};
+% selection(:,1) = wrapTo2Pi(selection(:,1) + rotation);
+selection = sortrows(selection,1);
+plotSelec = [selection ; selection(1,:)];
 
-%%
-% figure
-% polarplot(selection(:,1),selection(:,2)); hold on
-% polarplot(refAngles,RhoDescriptors{end,end}); hold off
+test   = [4 8 16 32 64];
+for k = 1:numel(test)
+    vecSize = test(k);
+    refAngles = linspace(0,2*pi,vecSize+1);
+    refAngles = refAngles(1:end-1);
+    rhoDescriptor = zeros(vecSize,1);
+    for n = 1:vecSize
+        [~,idx3] = min(abs(selection(:,1)-refAngles(n)));
+        rhoDescriptor(n,1) = selection(idx3,2);
+    end    
+    figure;
+    polarplot(plotSelec(:,1),plotSelec(:,2), 'LineWidth',3); hold on;
+    polarscatter(refAngles,rhoDescriptor, 'SizeData',100);
+    for i = 1:size(rhoDescriptor,1)
+        polarplot([0;refAngles(i)],[0;rhoDescriptor(i)],'Color','red');
+    end
+    hold off;
+end

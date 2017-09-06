@@ -11,11 +11,12 @@ function [image] = inverseFourierDescriptor(a,b,c,d,T,s,ImgSize)
         pl(k) = xt(it) + 1i*yt(it);
         k = k + 1;
     end
-    % plot reconstructed image with center [100,100] and rescale by scaleF.
-    scaleF = 50;
+    addX = ceil(ImgSize(2)/2);
+    addY = ceil(ImgSize(1)/2);
+    scaleF = 17;
     x2 = round(real(pl)*scaleF)';
-    y2 = round(imag(pl)*scaleF*-1)';
-    ind2 = sub2ind(ImgSize, y2+( (ImgSize(1)/2) + 1), x2+( (ImgSize(2)/2) + 1));
+    y2 = round(imag(pl)*scaleF)';
+    ind2 = sub2ind(ImgSize, y2+addY, x2+addX);
     image = false(ImgSize);
     image(ind2) = true;
 end

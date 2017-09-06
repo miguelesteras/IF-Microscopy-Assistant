@@ -6,14 +6,17 @@
 %   microscopy'
 %   This codes aims to:
 %   1. Determine the orientation of each cell based on the distance between
-%   contour pixels and center of mass. 
+%   contour pixels and center of mass.
+%   2. Compute center of mass for each individual cell, and distance from
+%   center to contour pixels (radious)
+%   3. Compute cell body and contour polar coordenates. 
 %   ======================================================================
 
 
 files = dir('*_metadata.mat');      
 num_files = length(files);
 for i = 1:num_files
-    load(files(i).name,'metadata');                                     % load files from disk
+    load(files(i).name,'metadata');                                     
     load(strcat(metadata.name,'_cellSequences.mat'),'cellSequences');   
     load(strcat(metadata.name,'_singleCellMask.mat'),'singleCellMask');
     
@@ -31,13 +34,13 @@ for i = 1:num_files
     % for every non-empty cell in cell sequence; save pixel location 
     % (whole cell and contour) in polar system (to facilitate rotations) 
     % and normalized to center of mass at [0,0]. The rotation necessary to
-    % make the contour pixel further from the center face up (theta=pi/2)
+    % make the contour pixel further from the center face North (theta=pi/2)
     % is calculate and will be used to normalize cell orientation before
     % training.
     for j = 1:size(index)
         selection = cellSequences{index(j)};
         image = false(metadata.imageSize);
-        image(selection) = true;                % only show selected cell in binary image
+        image(selection) = true;            
         stats = regionprops(image,'centroid','PixelList');  
         center = round(stats.Centroid);  
         centerMass{index(j)} = center;
@@ -54,7 +57,6 @@ for i = 1:num_files
         carteCoordenates = stats2.PixelList - ones(size(stats2.PixelList))*diag(center);      
         [theta, rho] = cart2pol(carteCoordenates(:,1),carteCoordenates(:,2));
         contourCoordinates{index(j)} = [wrapTo2Pi(theta) rho];
-
     end
     
     maxRadious = ceil(max(cellfun(@(v) v(2), maxRadii(index))));    
@@ -69,3 +71,19 @@ for i = 1:num_files
 
     %clearvars -except files num_files i
 end
+
+% %% Plots
+% 
+% ps1 = polarscatter(wrapTo2Pi(theta),rho, 'filled');
+% ps1.SizeData = 50;
+% ps1.MarkerFaceAlpha = .5;
+% hold on
+% ps2 = polarscatter(wrapTo2Pi(theta+rotation),rho,'filled');
+% ps2.SizeData = 50;
+% ps2.MarkerFaceAlpha = .7;
+% hold off
+% lg = legend('Original','Normalized Rotation');
+% lg.FontSize = 14;
+
+
+

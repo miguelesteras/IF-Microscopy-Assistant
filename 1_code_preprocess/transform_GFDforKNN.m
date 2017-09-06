@@ -15,7 +15,7 @@
 % seqLength = Number of frames in learning sequence (x input + 1 target).
 % M is the radial frequency. N is the angular frequency.
 seqLength = 8;              
-M = 9;                           
+M = 3;                           
 N = 10;   
 GFDDescriptors = [];
 GFDDescriptorsScaled = [];
@@ -77,3 +77,51 @@ end
 
 save('GFDDescriptors.mat','GFDDescriptors');     
 save('GFDDescriptorsScaled.mat','GFDDescriptorsScaled');     
+
+%% Visualize euclidian distance
+
+I1 = GFDDescriptors{10,end};
+I2 = GFDDescriptors{13,end};
+I3 = GFDDescriptors{30,end};
+I4 = GFDDescriptors{32,end};
+I5 = GFDDescriptors{80,end};
+I6 = GFDDescriptors{82,end};
+
+figure;
+subplot(2,3,1), imshow(I1)
+subplot(2,3,2), imshow(I2)
+subplot(2,3,3), imshow(I3)
+subplot(2,3,4), imshow(I4)
+subplot(2,3,5), imshow(I5)
+subplot(2,3,6), imshow(I6)
+
+cell1 = GFDDescriptors{10,1:end-2};
+cell2 = GFDDescriptors{13,1:end-2};
+cell3 = GFDDescriptors{30,1:end-2};
+cell4 = GFDDescriptors{32,1:end-2};
+cell5 = GFDDescriptors{80,1:end-2};
+cell6 = GFDDescriptors{82,1:end-2};
+
+% Compute Pairwise Euclidean distance between morphologies
+dist = pdist([cell1,cell2,cell3,cell4,cell5,cell6]','euclidean');
+distSqrF = squareform(dist);
+
+%visualize results
+cmap = [0.2422,    0.1504,    0.6603
+        0.2803,    0.2782,    0.9221
+        0.2440,    0.3358,    0.9988
+        0.2120,    0.6314,    0.6901
+        0.1709,    0.7154,    0.6342
+        0.1938,    0.7758,    0.6251
+        0.5044,    0.7993,    0.3480
+        0.8634,    0.7406,    0.1596
+        0.9892,    0.8136,    0.1885];   
+figure;
+imagesc(distSqrF);
+colormap(cmap);
+txt = num2str(distSqrF(:),'%0.2f');
+txt = strtrim(cellstr(txt));
+[x,y] = meshgrid(1:6);
+hstr  = text(x(:),y(:),txt(:),'HorizontalAlignment','center','color','white');
+names = {'cell 1','cell 2','cell 3','cell 4','cell 5','cell 6'};
+set(gca,'FontSize', 16,'XTickLabel',names,'YTickLabel',names)

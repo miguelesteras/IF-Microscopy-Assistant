@@ -10,7 +10,6 @@
 %   3. Detect clusters of cells -> create binary mask for clusters
 %   ======================================================================
 
-
 %% Pre-processing;
 % All .tiff files must be placed in working directory.
 % They will be transformed into individual cell arrays containing the video
@@ -45,15 +44,14 @@ for k = 1:num_files
                     'cellNumbers', [],...
                     'minNucArea', [],...
                     'maxNucArea', [],...
-                    'nucleusMedian', []);  
-                  
-    save(strcat(name,'_metadata.mat'),'metadata'); 
+                    'nucleusMedian', []);                
+    save(strcat(name,'_metadata.mat'),'metadata');
+    
     clearvars -except files num_files k
 end
-
 clear; clc;
 
-%% Reduce Image Size and Create Binary Masks for Nucleus and Cells
+%% Reduce Image Size (Gaussian pyramid) and Create Binary Masks for Nucleus and Cells
 
 files = dir('*_metadata.mat');
 num_files = length(files);
@@ -67,7 +65,6 @@ for k = 1:num_files
     end
 
     %% Detect nucleus and create a binary mask
-    
     % the red_channel array will store the binary mask of the red channel
     % where the nucleus are detected. The array nucleus_count will
     % record the number of nucleus and size found in each frame.
@@ -136,8 +133,8 @@ for k = 1:num_files
         selection = bwselect(green,c,r,8);              
         selection = imfill(selection,'holes');          
         cellMask{m} = selection;  
-        %CC = bwconncomp(selection);
-        %labelCells = labelmatrix(CC);                       
+        CC = bwconncomp(selection);
+        labelCells = labelmatrix(CC);                       
         
         % label nucleus mask, and add labels to cell mask to create a
         % collage of segmented cells and nucleus. This composed image will
@@ -190,12 +187,8 @@ for k = 1:num_files
     metadata.minCellArea = minCellArea;
     metadata.maxCellArea = maxCellArea;
     metadata.cellMedian = cellMedian;
-    metadata.cellNumbers = sum(N);
-                  
+    metadata.cellNumbers = sum(N);              
     save(strcat(metadata.name,'_metadata.mat'),'metadata'); 
     
     clearvars -except files num_files k
-    
 end
-
-clear; clc;

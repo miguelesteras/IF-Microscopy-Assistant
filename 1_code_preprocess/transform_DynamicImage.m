@@ -12,9 +12,12 @@
 %
 %   ======================================================================
 
-% Number of frames in learning sequence (x input + 1 target)
+% Number of frames in learning sequence (seqLength). Construct square
+% grayscale image of size doble the maximum radius of cells (maxRad).
 seqLength = 8; 
+intScale = linspace(20,200,seqLength-1);
 dynamicImages = [];
+maxRad = 40;
 
 files = dir('*_metadata.mat');      
 num_files = length(files);
@@ -36,33 +39,37 @@ for i = 1:num_files
         idx2 = find(~cellfun(@isempty,cellCoordinates(idx(j),:)));
         for k = 1:size(idx2,2) - (seqLength-1)
             rotation = rotationUp{idx(j),idx2(k)};
-            input = int8(zeros((metadata.maxRadious*2)+1, (metadata.maxRadious*2)+1));
+            input = int8(zeros((maxRad*2)+1,(maxRad*2)+1));
             m = 1;            
             while m < seqLength                
-                canvas = false((metadata.maxRadious*2)+1, (metadata.maxRadious*2)+1);
+                canvas = false(size(input));
                 selection = cellCoordinates{idx(j),idx2(k+m-1)};
                 selection(:,1) = wrapTo2Pi(selection(:,1) + rotation);          
                 [x,y] = pol2cart(selection(:,1),selection(:,2));
                 % including a change in the coordenates system, from origin
                 % [0,0] being center of image to [0,0] being top left image
                 % corner and postive y axis = rows (hence 'y*-1' is needed)
-                colSub = round(x)+metadata.maxRadious+1; 
-                rowSub = round(y*-1)+metadata.maxRadious+1;
+                colSub = round(x)+(maxRad+1); 
+                rowSub = round(y*-1)+(maxRad+1);
+                colSub(colSub>(maxRad*2)+1) = (maxRad*2)+1;
+                rowSub(rowSub>(maxRad*2)+1) = (maxRad*2)+1;
                 cellIdx = sub2ind(size(canvas), rowSub, colSub);
                 canvas(cellIdx) = true;
                 SE = strel('disk',2);
                 contour = bwmorph(imopen(imfill(canvas,'holes'),SE),'remove');
-                input(contour) = 15*m;
+                input(contour) = intScale(m);
                 m = m+1;
             end
             tempDynamic{count,1} = mat2gray(input);
-            target = int8(zeros((metadata.maxRadious*2)+1, (metadata.maxRadious*2)+1));
-            canvas = false((metadata.maxRadious*2)+1, (metadata.maxRadious*2)+1);
+            target = int8(zeros(size(input)));
+            canvas = false(size(input));
             selection = cellCoordinates{idx(j),idx2(k+m-1)};
             selection(:,1) = selection(:,1) + rotation;          
             [x,y] = pol2cart(selection(:,1),selection(:,2));
-            colSub = round(x)+metadata.maxRadious+1; 
-            rowSub = round(y*-1)+metadata.maxRadious+1;
+            colSub = round(x)+(maxRad+1); 
+            rowSub = round(y*-1)+(maxRad+1);
+            colSub(colSub>(maxRad*2)+1) = (maxRad*2)+1;
+            rowSub(rowSub>(maxRad*2)+1) = (maxRad*2)+1;
             cellIdx = sub2ind(size(canvas), rowSub, colSub);
             canvas(cellIdx) = true;
             SE = strel('disk',2);
@@ -79,18 +86,15 @@ save('dynamicImages.mat','dynamicImages');
 
 %% Plots
 
-canvas = cat(3, dynamicImages{5,1}, dynamicImages{5,1}, dynamicImages{5,1});
-canvas(:,:,1) = canvas(:,:,1) + dynamicImages{5,2};
-canvas(:,:,2) = canvas(:,:,2) - dynamicImages{5,2};
-canvas(:,:,3) = canvas(:,:,3) - dynamicImages{5,2};
+canvas = cat(3, tempDynamic{5,1}, tempDynamic{5,1}, tempDynamic{5,1});
+figure;
 imshow(canvas)
-
-%% Transform into gradients
-
-% [Gmag,Gdir] = imgradient(dynamicInput{1});
-% [Gx, Gy] = imgradientxy(dynamicInput{1},'prewitt');
-% figure
-% imshowpair(Gx, Gy,'montage');
-% C = imfuse(Gx, Gy, 'montage');
-% figure
-% imshowpair(Gmag,Gdir,'montage');
+canvas(:,:,1) = canvas(:,:,1) + tempDynamic{5,2};
+canvas(:,:,2) = canvas(:,:,2) - tempDynamic{5,2};
+canvas(:,:,3) = canvas(:,:,3) - tempDynamic{5,2};
+figure;
+imshow(canvas)
+output = canvas;
+output(output<1) = 0;
+figure;
+imshow(output)
