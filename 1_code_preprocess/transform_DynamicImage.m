@@ -90,16 +90,19 @@ save('dynamicImages.mat','dynamicImages');
 
 %% Plots
 
-n = 1;
-canvas = cat(3, tempDynamic{n,1}, tempDynamic{n,1}, tempDynamic{n,1});
-figure;
-imshow(canvas)
-canvas(:,:,1) = canvas(:,:,1) + tempDynamic{n,2};
-canvas(:,:,2) = canvas(:,:,2) - tempDynamic{n,2};
-canvas(:,:,3) = canvas(:,:,3) - tempDynamic{n,2};
-figure;
-imshow(canvas)
-output = cat(3, tempDynamic{n,2}, zeros(size(tempDynamic{n,2}),'like',tempDynamic{n,2}),...
-                                    zeros(size(tempDynamic{n,2}),'like',tempDynamic{n,2}));
-figure;
-imshow(output)
+No = [200 20 650 50 345];
+for i = 1:numel(No)
+    n = No(i);
+    canvas = cat(3, dynamicImages{n,1}, dynamicImages{n,1}, dynamicImages{n,1});
+    figure;
+    imshow(imresize(canvas,2))
+    canvas(:,:,1) = canvas(:,:,1) + dynamicImages{n,2};
+    canvas(:,:,2) = canvas(:,:,2) - dynamicImages{n,2};
+    canvas(:,:,3) = canvas(:,:,3) - dynamicImages{n,2};
+    figure;
+    imshow(imresize(canvas,2))
+    output = cat(3, dynamicImages{n,2}, zeros(size(dynamicImages{n,2}),'like',dynamicImages{n,2}),...
+                                        zeros(size(dynamicImages{n,2}),'like',dynamicImages{n,2}));
+    figure;
+    imshow(imresize(output,2))
+end

@@ -16,6 +16,7 @@
 % descriptor vector target size.
 seqLength = 8;              
 vecSize   = 20;             
+BoundaryDescriptors = [];
 
 files = dir('*_metadata.mat');      
 num_files = length(files);
@@ -73,7 +74,7 @@ for i = 1:num_files
     end
     %% standarize feature vector size
     
-    BoundaryDataSetSt = cell(size(BoundaryDataSet));
+    BoundaryTemp = cell(size(BoundaryDataSet));
     for k = 1:numel(BoundaryDataSet)
         set = BoundaryDataSet{k};
         while size(set,1) ~= vecSize
@@ -105,14 +106,13 @@ for i = 1:num_files
                 end
             end 
         end
-        BoundaryDataSetSt{k} = set;
+        BoundaryTemp{k} = set;
     end
     
-    save(strcat(metadata.name,'_BoundaryDataSet.mat'),'BoundaryDataSet');
-    save(strcat(metadata.name,'_BoundaryDataSetSt.mat'),'BoundaryDataSetSt');     
-    
-%     clearvars -except files num_files i
+    BoundaryDescriptors = [BoundaryDescriptors;BoundaryTemp];
 end
+
+save('BoundaryDescriptors.mat','BoundaryDescriptors');
 
 %% Plots 
 
