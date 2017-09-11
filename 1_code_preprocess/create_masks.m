@@ -53,6 +53,9 @@ clear; clc;
 
 %% Reduce Image Size (Gaussian pyramid) and Create Binary Masks for Nucleus and Cells
 
+% cell array to contain single cell areas (singleCellAreas). 
+singleCellArea = [];
+
 files = dir('*_metadata.mat');
 num_files = length(files);
 for k = 1:num_files
@@ -113,12 +116,11 @@ for k = 1:num_files
     
     % Initialize cell arrays of binary mask for all cell
     % structures (cellMask), only single cells (singleCellMask), only cell
-    % clusters (clusterMask), and cell arrays to contain single cell areas
-    % (singleCellAreas). 
-    singleCellArea  = cell(size(movie,1),1);   
+    % clusters (clusterMask).
     cellMask        = cell(size(movie,1),1);   
     singleCellMask  = cell(size(movie,1),1);   
-    clusterMask     = cell(size(movie,1),1);   
+    clusterMask     = cell(size(movie,1),1);  
+    tempCellArea    = cell(size(movie,1),1);
 
     for m = 1:size(movie,1)
         % hysteresis thresholding. Threshold level found using using 
@@ -160,37 +162,46 @@ for k = 1:num_files
         % record single cell area info. Later used to identified cell in
         % partial or full view (due to changes in depth). 
         CCC = bwconncomp(singleCellMask{m});
-        singleCellArea{m} = cellfun('length',CCC.PixelIdxList);   
+        tempCellArea{m} = cellfun('length',CCC.PixelIdxList);   
         end        
     end
+    singleCellArea = [singleCellArea ; tempCellArea];
+    
+    cellAreas = sort(cell2mat(tempCellArea'));         
+    values = quantile(cellAreas,[0.3 0.5 0.8]);  
+    count = numel(cellAreas)*0.5;
+    metadata.minCellArea = values(1);
+    metadata.maxCellArea = values(3);
+    metadata.cellMedian = values(2);
+    metadata.cellNumbers = count;              
+    save(strcat(metadata.name,'_metadata.mat'),'metadata'); 
+    
     % save variables into disk
     save(strcat(metadata.name,'_movieReduced.mat'),'movie');
     save(strcat(metadata.name,'_nucleusInfo.mat'),'nucleusInfo');
     save(strcat(metadata.name,'_nucleusMask.mat'),'nucleusMask');
     save(strcat(metadata.name,'_cellMask.mat'),'cellMask');     
-    save(strcat(metadata.name,'_singleCellArea.mat'),'singleCellArea');
     save(strcat(metadata.name,'_singleCellMask.mat'),'singleCellMask');
     save(strcat(metadata.name,'_clusterMask.mat'),'clusterMask');
-    
-    %% average cell size
-
-    % remove outliers (10% smallest and biggest), then select mode bin from
-    % biggest half. Set min area as the edge of two bins smaller from the
-    % mode bin.
-    cellAreas = sort(cell2mat(singleCellArea'));         
-    idx = round(size(cellAreas,2)/10);
-    cellAreas = cellAreas(idx:end-idx);     
-    [N,edges] = histcounts(cellAreas,8);    
-    [~,id] = max(N(5:8));                   
-    minCellArea = edges(2+id);               
-    maxCellArea = cellAreas(end);           
-    cellMedian = median(cellAreas(sum(N(1:1+id))+1:end));
-    %histogram(cellAreas)
-    metadata.minCellArea = minCellArea;
-    metadata.maxCellArea = maxCellArea;
-    metadata.cellMedian = cellMedian;
-    metadata.cellNumbers = sum(N);              
-    save(strcat(metadata.name,'_metadata.mat'),'metadata'); 
-    
-    clearvars -except files num_files k
 end
+
+save(strcat(metadata.name,'_singleCellArea.mat'),'singleCellArea');
+
+%% average cell size
+
+clearvars singleCellArea
+
+metadata = struct('minCellArea', [],...    
+                'maxCellArea', [],...
+                'cellMedian', [],...
+                'cellNumbers', []); 
+            
+cellAreas = sort(cell2mat(singleCellArea'));
+values = quantile(cellAreas,[0.3 0.5 0.8]);  
+count = numel(cellAreas)*0.5;
+metadata.minCellArea = values(1);
+metadata.maxCellArea = values(3);
+metadata.cellMedian = values(2);
+metadata.cellNumbers = count;   
+
+save('metadata.mat','metadata');
