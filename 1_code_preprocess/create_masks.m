@@ -121,10 +121,12 @@ for k = 1:num_files
     clusterMask     = cell(size(movie,1),1);   
 
     for m = 1:size(movie,1)
-        % binarize using Otsu's threshold method
-        green = imbinarize(movie{m}(:,:,2),'adaptive','ForegroundPolarity','bright','Sensitivity',0.4); 
+        % hysteresis thresholding. Threshold level found using using 
+        % Otsu's method
+        [level,~] = graythresh(movie{m}(:,:,2));
+        [green,~] = hysteresis3d(movie{m}(:,:,2),level*0.7,level,4);        
         % fill holes and morphological opening
-        se = strel('disk',2);
+        se = strel('disk',4);
         green = imopen(imfill(green,'holes'), se);
         % foreground regions in the binary cellmask regions that overlap
         % with foreground pixels in the binary nucleus mask are selected as

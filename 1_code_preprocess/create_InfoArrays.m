@@ -72,18 +72,21 @@ for i = 1:num_files
     %clearvars -except files num_files i
 end
 
-% %% Plots
-% 
-% ps1 = polarscatter(wrapTo2Pi(theta),rho, 'filled');
-% ps1.SizeData = 50;
-% ps1.MarkerFaceAlpha = .5;
-% hold on
-% ps2 = polarscatter(wrapTo2Pi(theta+rotation),rho,'filled');
-% ps2.SizeData = 50;
-% ps2.MarkerFaceAlpha = .7;
-% hold off
-% lg = legend('Original','Normalized Rotation');
-% lg.FontSize = 14;
+%% Plots
+
+ps1 = polarscatter(wrapTo2Pi(theta),rho, 'filled');
+ps1.SizeData = 50;
+ps1.MarkerFaceAlpha = .5;
+hold on
+ps2 = polarscatter(wrapTo2Pi(theta+rotation),rho,'filled');
+ps2.SizeData = 50;
+ps2.MarkerFaceAlpha = .7;
+hold off
+lg = legend('Original','Normalized Rotation');
+lg.FontSize = 14;
+
+%% Area in sequence
+
 
 
 
