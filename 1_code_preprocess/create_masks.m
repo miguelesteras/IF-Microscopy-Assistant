@@ -1,4 +1,4 @@
-%% Phase 1. Create Masks
+%% Phase 1.1 Create Masks
 %   ======================================================================
 %   Code by Miguel Esteras-Bejar, 07/2017
 %   This code is part of the project:
@@ -9,47 +9,6 @@
 %   2. Detect single cells      -> create binary mask for cells
 %   3. Detect clusters of cells -> create binary mask for clusters
 %   ======================================================================
-
-%% Pre-processing;
-% All .tiff files must be placed in working directory.
-% They will be transformed into individual cell arrays containing the video
-% frames
-
-files = dir('*.tif');      
-num_files = length(files);
-
-for k = 1:num_files
-    % extract tiff file information, including number of frames. Create an
-    % empty cell array to store all video frames
-    tiffInfo = imfinfo(files(k).name);  
-    no_frames = numel(tiffInfo);        
-    movie = cell(no_frames,1);           
-    
-    for i = 1:no_frames
-        I=imread(files(k).name,i);
-        movie{i}=I;    
-    end
-    
-    % save movie cell array to disk as matlab variable.  
-    [~,name,~] = fileparts(files(k).name);
-    name(~ismember(name,['0':'9' 'a':'z' 'A':'Z'])) = '';
-    save(strcat(name,'_movie.mat'),'movie');               
-    
-    % record experiment metadata and save it as matlab variable
-    metadata = struct('name',name,...       
-                    'imageSize', [],...
-                    'minCellArea', [],...    
-                    'maxCellArea', [],...
-                    'cellMedian', [],...
-                    'cellNumbers', [],...
-                    'minNucArea', [],...
-                    'maxNucArea', [],...
-                    'nucleusMedian', []);                
-    save(strcat(name,'_metadata.mat'),'metadata');
-    
-    clearvars -except files num_files k
-end
-clear; clc;
 
 %% Reduce Image Size (Gaussian pyramid) and Create Binary Masks for Nucleus and Cells
 
@@ -168,8 +127,8 @@ for k = 1:num_files
     singleCellArea = [singleCellArea ; tempCellArea];
     
     cellAreas = sort(cell2mat(tempCellArea'));         
-    values = quantile(cellAreas,[0.3 0.5 0.8]);  
-    count = numel(cellAreas)*0.5;
+    values = quantile(cellAreas,[0.2 0.5 0.8]);  
+    count = numel(cellAreas)*0.4;
     metadata.minCellArea = values(1);
     metadata.maxCellArea = values(3);
     metadata.cellMedian = values(2);
@@ -185,11 +144,12 @@ for k = 1:num_files
     save(strcat(metadata.name,'_clusterMask.mat'),'clusterMask');
 end
 
-save(strcat(metadata.name,'_singleCellArea.mat'),'singleCellArea');
+save('singleCellArea.mat','singleCellArea');
+clearvars
 
 %% average cell size
-
-clearvars singleCellArea
+ 
+load('singleCellArea.mat','singleCellArea');
 
 metadata = struct('minCellArea', [],...    
                 'maxCellArea', [],...
@@ -197,8 +157,8 @@ metadata = struct('minCellArea', [],...
                 'cellNumbers', []); 
             
 cellAreas = sort(cell2mat(singleCellArea'));
-values = quantile(cellAreas,[0.3 0.5 0.8]);  
-count = numel(cellAreas)*0.5;
+values = quantile(cellAreas,[0.2 0.5 0.8]);  
+count = numel(cellAreas)*0.4;
 metadata.minCellArea = values(1);
 metadata.maxCellArea = values(3);
 metadata.cellMedian = values(2);

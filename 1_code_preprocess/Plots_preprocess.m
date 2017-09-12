@@ -182,10 +182,13 @@ hold off;
 %% Filter single cell area
 
 files = dir('*_metadata.mat');      
-load(files(3).name,'metadata');
-load(strcat(metadata.name,'_singleCellMask.mat'),'singleCellMask');
-load(strcat(metadata.name,'_movie.mat'),'movie');       
-load(strcat(metadata.name,'_cellMask.mat'),'cellMask');       
+OneMetadata = load(files(3).name,'metadata');
+OneMetadata = OneMetadata.metadata;
+load(strcat(OneMetadata.name,'_singleCellMask.mat'),'singleCellMask');
+load(strcat(OneMetadata.name,'_movieReduced.mat'),'movie');       
+load(strcat(OneMetadata.name,'_cellMask.mat'),'cellMask');       
+load('metadata.mat','metadata');      
+
 
 j = 30;
 
@@ -238,3 +241,110 @@ figure; imshow(clusterMask);
 selection = bwareafilt(singleCellMask,[metadata.minCellArea metadata.maxCellArea]);
 figure; imshow(selection)
 
+
+%% Plots on cell sequences
+
+summaryLength = [];
+files = dir('*_metadata.mat');      
+load(files(2).name,'metadata');
+load(strcat(metadata.name,'_singleCellMask.mat'),'singleCellMask');
+
+% create cell array with the location of only single cell in full
+% view as defined to be between min and max cell area.
+fullCellLocation = cell(size(singleCellMask,1),1);   
+
+for j = 1:size(singleCellMask,1)
+    selection = bwareafilt(singleCellMask{j},[metadata.minCellArea metadata.maxCellArea]); % select only cells in full view  
+    pixels = struct2cell(regionprops(selection,'PixelIdxList'));
+    fullCellLocation{j} = pixels;     
+end
+
+
+MeanLength = [];
+NumSequence = [];
+NumSeq8     = [];
+
+X = [0.5 0.6 0.7 0.75 0.8 0.82 0.84 0.86 0.88 0.9 0.92 0.94 0.96 0.98 0.99];
+for i = 1:numel(X)  
+    S = X(i);
+
+    % cell array to store cell sequences
+    cellSequences = cell(1,size(singleCellMask,1)); 
+    seqCount = 1;
+
+    % detect cells and start sequence in first frame
+    for m = 1:size(fullCellLocation{1},2)   
+        object = fullCellLocation{1}{m};
+        cellSequences{seqCount,1} = object;
+        seqCount = seqCount + 1;
+    end
+
+    % from second frame onwards, for every cell in frame, check if the cell
+    % was present in previoius frame (based on >= similar location). If
+    % true, add cell to previous sequence, if false, start a new sequence.
+    for k = 2:size(fullCellLocation,1)  
+        if isempty(fullCellLocation{k})
+            continue
+        else
+            preSeq = find(~cellfun(@isempty,cellSequences(:,k-1)));
+            prior = cellSequences(preSeq,k-1);
+            for m = 1:size(fullCellLocation{k},2)
+                object = fullCellLocation{k}(m);
+                object = repmat(object,[size(prior,1) 1]);
+                simil = cellfun('length',cellfun(@intersect, prior, object, 'UniformOutput', false));
+                [value, idx] = max(simil);                          
+                if isempty(simil) || value < size(fullCellLocation{k}{m},1)*S
+                    cellSequences{seqCount,k} = fullCellLocation{k}{m};
+                    seqCount = seqCount + 1;
+                else    
+                    cellSequences{preSeq(idx),k} = fullCellLocation{k}{m};                      
+                end
+            end
+        end
+    end
+
+    % Binary map of sequences, histogram and sequence lengths
+    binarymap = ~cellfun(@isempty,cellSequences);
+    %figure; imshow(binarymap);                      
+    lengths = sum(uint8(binarymap),2);
+    summaryLength = [summaryLength;lengths(lengths > 1)];
+    %figure; histogram(summaryLength,90)
+
+    % total number of unique sequences (>1 frames)
+    numSeq = size(lengths(lengths > 1),1);
+    % total number of 8 frames sequences (potential training data size)
+    trainSize = sum(lengths(lengths > 7)-7);  
+    
+    MeanLength = [MeanLength ; mean(lengths)];
+    NumSequence = [NumSequence ; numSeq];
+    NumSeq8     = [NumSeq8 ; trainSize];
+end
+
+ticks = [0.5 0.6 0.7 0.8 0.9 1];
+
+figure; plot(X,MeanLength, 'Color', 'green', 'LineWidth', 4); hold on
+yl = ylim;
+plot([0.8 0.8], [0 yl(2)], 'r', 'LineWidth',2);
+grid on
+xticks(ticks)
+xlabel('Similarity')
+ylabel('Mean Length of Sequences')
+set(gca,'fontsize',16)
+
+figure; plot(X,NumSequence, 'Color', 'green', 'LineWidth', 4); hold on
+yl = ylim;
+plot([0.8 0.8], [0 yl(2)], 'r', 'LineWidth',2);
+grid on
+xticks(ticks)
+xlabel('Similarity')
+ylabel('Total No. of Sequences (>=2 frame)')
+set(gca,'fontsize',16)
+
+figure; plot(X,NumSeq8, 'Color', 'green', 'LineWidth', 4); hold on
+yl = ylim;
+plot([0.8 0.8], [0 yl(2)], 'r', 'LineWidth',2);
+grid on
+xticks(ticks)
+xlabel('Similarity')
+ylabel('Total No. of Sequences (>=8 frames)')
+set(gca,'fontsize',16)

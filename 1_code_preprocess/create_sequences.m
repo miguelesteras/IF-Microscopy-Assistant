@@ -60,12 +60,13 @@ for i = 1:num_files
         end
     end
     
-%     % just for testing, show binary map of sequences and histogram
-%     binarymap = ~cellfun(@isempty,cellSequences);
-%     figure; imshow(binarymap);                      
-%     lengths = sum(uint8(binarymap),2);
-%     summaryLength = [summaryLength;lengths(lengths > 1)];
-%     figure; histogram(summaryLength)
+    % Binary map of sequences, histogram and sequence lengths
+    binarymap = ~cellfun(@isempty,cellSequences);
+    %figure; imshow(binarymap);                      
+    lengths = sum(uint8(binarymap),2);
+    %summaryLength = [summaryLength;lengths(lengths > 1)];
+    %figure; histogram(summaryLength)
+
 
     % total number of unique sequences (>2 frames)
     numSeq = size(lengths(lengths > 1),1);
@@ -77,6 +78,4 @@ for i = 1:num_files
     save(strcat(metadata.name,'_fullCellLocation.mat'),'fullCellLocation');
     save(strcat(metadata.name,'_cellSequences.mat'),'cellSequences');   
     save(strcat(metadata.name,'_metadata.mat'),'metadata');
-
-    %clearvars -except files num_files i
 end
