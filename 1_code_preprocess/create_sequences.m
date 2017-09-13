@@ -50,7 +50,7 @@ for i = 1:num_files
                 object = repmat(object,[size(prior,1) 1]);
                 simil = cellfun('length',cellfun(@intersect, prior, object, 'UniformOutput', false));
                 [value, idx] = max(simil);                          
-                if isempty(simil) || value < size(fullCellLocation{k}{m},1)*0.6
+                if isempty(simil) || value < size(fullCellLocation{k}{m},1)*0.8
                     cellSequences{seqCount,k} = fullCellLocation{k}{m};
                     seqCount = seqCount + 1;
                 else    
@@ -64,9 +64,8 @@ for i = 1:num_files
     binarymap = ~cellfun(@isempty,cellSequences);
     %figure; imshow(binarymap);                      
     lengths = sum(uint8(binarymap),2);
-    %summaryLength = [summaryLength;lengths(lengths > 1)];
+    summaryLength = [summaryLength;lengths(lengths > 1)];
     %figure; histogram(summaryLength)
-
 
     % total number of unique sequences (>2 frames)
     numSeq = size(lengths(lengths > 1),1);

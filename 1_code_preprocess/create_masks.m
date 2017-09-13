@@ -128,7 +128,7 @@ for k = 1:num_files
     
     cellAreas = sort(cell2mat(tempCellArea'));         
     values = quantile(cellAreas,[0.2 0.5 0.8]);  
-    count = numel(cellAreas)*0.4;
+    count = numel(cellAreas)*0.6;
     metadata.minCellArea = values(1);
     metadata.maxCellArea = values(3);
     metadata.cellMedian = values(2);
@@ -158,7 +158,7 @@ metadata = struct('minCellArea', [],...
             
 cellAreas = sort(cell2mat(singleCellArea'));
 values = quantile(cellAreas,[0.2 0.5 0.8]);  
-count = numel(cellAreas)*0.4;
+count = numel(cellAreas)*0.6;
 metadata.minCellArea = values(1);
 metadata.maxCellArea = values(3);
 metadata.cellMedian = values(2);

@@ -348,3 +348,16 @@ xticks(ticks)
 xlabel('Similarity')
 ylabel('Total No. of Sequences (>=8 frames)')
 set(gca,'fontsize',16)
+
+%% sequence length histogram
+
+len = sort(summaryLength);
+quant8 = find(len==8, 1, 'first')/numel(summaryLength);
+quant4 = find(len==4, 1, 'first')/numel(summaryLength);
+
+figure; histogram(summaryLength,90); hold on
+yl = ylim;
+plot([8 8], [0 yl(2)], 'r', 'LineWidth',2);
+ylabel('Count')
+xlabel('Unique Sequence Length (frames)')
+set(gca,'fontsize',16)
