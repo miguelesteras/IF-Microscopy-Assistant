@@ -31,7 +31,6 @@ X = (cell2mat(cellfun(@(x) (reshape(x', 1, [])),inputData,'UniformOutput',false)
 Y = (cell2mat(cellfun(@(x) (reshape(x', 1, [])),targetData,'UniformOutput',false)))';
 
 % Training feedforward network
-
 hiddenSizes = [500 200];                          % neurons in hidden layer
 ffNet = feedforwardnet(hiddenSizes);        % create feedforward network
 view(ffNet)

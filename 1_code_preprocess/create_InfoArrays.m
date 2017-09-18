@@ -11,10 +11,11 @@
 %   center to contour pixels (radious)
 %   3. Compute cell body and contour polar coordenates. 
 %   ======================================================================
-close all; clear; clc;
-
+close all; clear;
 files = dir('*_metadata.mat');      
 num_files = length(files);
+maxmaxR = zeros(num_files,1);
+
 for i = 1:num_files
     load(files(i).name,'metadata');                                     
     load(strcat(metadata.name,'_cellSequences.mat'),'cellSequences');   
@@ -61,6 +62,7 @@ for i = 1:num_files
     
     maxRadious = ceil(max(cellfun(@(v) v(2), maxRadii(index))));    
     [metadata(:).maxRadious] = maxRadious;
+    maxmaxR(i) = maxRadious;
 
     save(strcat(metadata.name,'_metadata.mat'),'metadata');
     save(strcat(metadata.name,'_centerMass.mat'),'centerMass');     
@@ -68,20 +70,10 @@ for i = 1:num_files
     save(strcat(metadata.name,'_rotationUp.mat'),'rotationUp');     
     save(strcat(metadata.name,'_contourCoordinates.mat'),'contourCoordinates');     
     save(strcat(metadata.name,'_cellCoordinates.mat'),'cellCoordinates');     
-
-    %clearvars -except files num_files i
 end
+clearvars -except maxmaxR
 
-%% Plots
-
-% ps1 = polarscatter(wrapTo2Pi(theta),rho, 'filled');
-% ps1.SizeData = 50;
-% ps1.MarkerFaceAlpha = .5;
-% hold on
-% ps2 = polarscatter(wrapTo2Pi(theta+rotation),rho,'filled');
-% ps2.SizeData = 50;
-% ps2.MarkerFaceAlpha = .7;
-% hold off
-% lg = legend('Original','Normalized Rotation');
-% lg.FontSize = 14;
+load('metadata.mat','metadata');
+[metadata(:).maxRadious] = maxmaxR;
+save('metadata.mat','metadata');
 

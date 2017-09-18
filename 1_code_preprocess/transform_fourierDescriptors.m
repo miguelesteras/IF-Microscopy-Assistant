@@ -21,6 +21,7 @@
 %   pp. 641 - 662 (1996).
 %   ======================================================================
 
+close all; clear;
 % seqLength = Number of frames in learning sequence (x input + 1 target).
 % C determines the number of coefficients (and the description vector
 % size). P determines the number of sampling points used for the fourier
@@ -30,11 +31,11 @@ seqLength = 8;
 CC = [4 8 10];                 
 P = 0.5;          
 rotationInva = false;
-fourierDescriptor = [];
 
-for p = 1:numel(C)
+for p = 1:numel(CC)
     C = CC(p);
 
+    fourierDescriptor = [];
     files = dir('*_metadata.mat');      
     num_files = length(files);
     for i = 1:num_files
@@ -46,7 +47,6 @@ for p = 1:numel(C)
         noFrames = sum(double(~cellfun(@isempty,cellCoordinates)),2);
         idx = find(noFrames >= seqLength);
         fouriertemp = cell(100,seqLength+1); 
-        fouriertempScaled = cell(100,seqLength+1);
         count = 1;
 
         for j = 1:size(idx,1)
@@ -73,10 +73,7 @@ for p = 1:numel(C)
                 count = count +1;
             end
         end
-
         fourierDescriptor = [fourierDescriptor;fouriertemp];
     end
     save(strcat('fourierDescriptorC',num2str(C),'.mat'),'fourierDescriptor');
 end
-
-

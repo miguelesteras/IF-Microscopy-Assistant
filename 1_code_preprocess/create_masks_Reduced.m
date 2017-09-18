@@ -1,4 +1,4 @@
-%% Phase 1.1 Create Masks
+%% Phase 1.1 Create Masks (Reduced)
 %   ======================================================================
 %   Code by Miguel Esteras-Bejar, 07/2017
 %   This code is part of the project:
@@ -10,7 +10,7 @@
 %   3. Detect clusters of cells -> create binary mask for clusters
 %   ======================================================================
 
-%% Create Binary Masks for Nucleus and Cells
+%% Reduce Image Size (Gaussian pyramid) and Create Binary Masks for Nucleus and Cells
 
 % cell array to contain single cell areas (singleCellAreas). 
 singleCellArea = [];
@@ -21,6 +21,11 @@ for k = 1:num_files
     load(files(k).name,'metadata');    
     load(strcat(metadata.name,'_movie.mat'),'movie'); 
     
+    %% Compute a Gaussian pyramid reduction by one level
+    for j = 1:size(movie,1)
+        movie{j} = impyramid(movie{j}, 'reduce');    
+    end
+
     %% Detect nucleus and create a binary mask
     % the red_channel array will store the binary mask of the red channel
     % where the nucleus are detected. The array nucleus_count will
@@ -131,30 +136,13 @@ for k = 1:num_files
     save(strcat(metadata.name,'_metadata.mat'),'metadata'); 
     
     % save variables into disk
+    save(strcat(metadata.name,'_movieReduced.mat'),'movie');
     save(strcat(metadata.name,'_nucleusInfo.mat'),'nucleusInfo');
     save(strcat(metadata.name,'_nucleusMask.mat'),'nucleusMask');
     save(strcat(metadata.name,'_cellMask.mat'),'cellMask');     
     save(strcat(metadata.name,'_singleCellMask.mat'),'singleCellMask');
     save(strcat(metadata.name,'_clusterMask.mat'),'clusterMask');
 end
+
 save('singleCellArea.mat','singleCellArea');
 clearvars
-
-%% average cell size
- 
-load('singleCellArea.mat','singleCellArea');
-
-metadata = struct('minCellArea', [],...    
-                'maxCellArea', [],...
-                'cellMedian', [],...
-                'cellNumbers', []); 
-            
-cellAreas = sort(cell2mat(singleCellArea'));
-values = quantile(cellAreas,[0.2 0.5 0.8]);  
-count = numel(cellAreas)*0.6;
-metadata.minCellArea = values(1);
-metadata.maxCellArea = values(3);
-metadata.cellMedian = values(2);
-metadata.cellNumbers = count;   
-
-save('metadata.mat','metadata');

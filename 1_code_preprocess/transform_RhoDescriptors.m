@@ -14,11 +14,22 @@
 
 % Number of frames in learning sequence (seqLength) and descriptor vector
 % size (vecSize).
-seqLength = 8;            
+seqLength = 10;            
 vecSize   = 16;            
 refAngles = linspace(0,2*pi,vecSize+1);
 refAngles = refAngles(1:end-1);
 RhoDescriptors = [];
+RhoDescriptors04 = [];
+RhoDescriptors05 = [];
+RhoDescriptors06 = [];
+RhoDescriptors07 = [];
+TrainingAreas = [];
+
+% Calculate area values for cummulative quantiles, later used for training
+% data synthesis
+load('singleCellArea.mat','singleCellArea');
+cellAreas = sort(cell2mat(singleCellArea'));
+QQ = quantile(cellAreas,[0.4 0.5 0.6 0.7]);
 
 files = dir('*_metadata.mat');      
 num_files = length(files);
@@ -26,11 +37,18 @@ for i = 1:num_files
     load(files(i).name,'metadata');                                  
     load(strcat(metadata.name,'_rotationUp.mat'),'rotationUp');
     load(strcat(metadata.name,'_contourCoordinates.mat'),'contourCoordinates');     
+    load(strcat(metadata.name,'_cellCoordinates.mat'),'cellCoordinates'); 
 
     % detect sequence of length equal or greater than seqLength
     noFrames = sum(double(~cellfun(@isempty,contourCoordinates)),2);
     idx = find(noFrames >= seqLength);
+    TrainingAreasTemp = zeros(100,seqLength);
     tempRhoDesc = cell(100,seqLength); 
+    tempRho04 = cell(100,seqLength);    
+    tempRho05 = cell(100,seqLength);
+    tempRho06 = cell(100,seqLength);
+    tempRho07 = cell(100,seqLength);
+
     count = 1;
     
     for j = 1:size(idx,1)
@@ -39,7 +57,8 @@ for i = 1:num_files
             % the rotation ([rotation to north] - pi/2) makes further pixel from center of image face East. 
             % The rho descriptors starts from that point and goes around the shape anticlockwise.
             rotation = rotationUp{idx(j),idx2(k)} - pi/2;
-            for m = 1:seqLength                
+            for m = 1:seqLength     
+                TrainingAreasTemp(count,m) = size(cellCoordinates{idx(j),idx2(k+m-1)},1);
                 selection = contourCoordinates{idx(j),idx2(k+m-1)};
                 selection(:,1) = wrapTo2Pi(selection(:,1) + rotation);
                 rhoDescriptor = zeros(vecSize,1);
@@ -48,37 +67,29 @@ for i = 1:num_files
                     rhoDescriptor(n,1) = selection(idx3,2);
                 end                    
                 tempRhoDesc{count,m} = rhoDescriptor;
-            end           
+            end 
+            % create synthetic Rho feature vectors, introducing small scale
+            % variations
+            selectionArea = size(cellCoordinates{idx(j),idx2(k)},1);
+            FF = sqrt(QQ/selectionArea);
+            tempRho04(count,:) = cellfun(@(x) x*FF(1), tempRhoDesc(count,:),'un',0);
+            tempRho05(count,:) = cellfun(@(x) x*FF(2), tempRhoDesc(count,:),'un',0);
+            tempRho06(count,:) = cellfun(@(x) x*FF(3), tempRhoDesc(count,:),'un',0);
+            tempRho07(count,:) = cellfun(@(x) x*FF(4), tempRhoDesc(count,:),'un',0);
             count = count+1;
         end               
     end
-    %save(strcat(metadata.name,'_RhoDescriptors.mat'),'tempRhoDesc');
-    RhoDescriptors = [RhoDescriptors;tempRhoDesc];
+    TrainingAreas = [TrainingAreas ; TrainingAreasTemp];
+    RhoDescriptors = [RhoDescriptors ; tempRhoDesc];
+    RhoDescriptors04 = [RhoDescriptors04 ; tempRho04];
+    RhoDescriptors05 = [RhoDescriptors05 ; tempRho05];
+    RhoDescriptors06 = [RhoDescriptors06 ; tempRho06];
+    RhoDescriptors07 = [RhoDescriptors07 ; tempRho07];
+
 end
+save('TrainingAreas.mat','TrainingAreas');   
 save('RhoDescriptors.mat','RhoDescriptors');   
-
-%% Plots
-% rotation = -5.977;
-% selection = contourCoordinates{idx(2),idx2(2)};
-% selection(:,1) = wrapTo2Pi(selection(:,1) + rotation);
-selection = sortrows(selection,1);
-plotSelec = [selection ; selection(1,:)];
-
-test   = [4 8 16 32 64];
-for k = 1:numel(test)
-    vecSize = test(k);
-    refAngles = linspace(0,2*pi,vecSize+1);
-    refAngles = refAngles(1:end-1);
-    rhoDescriptor = zeros(vecSize,1);
-    for n = 1:vecSize
-        [~,idx3] = min(abs(selection(:,1)-refAngles(n)));
-        rhoDescriptor(n,1) = selection(idx3,2);
-    end    
-    figure;
-    polarplot(plotSelec(:,1),plotSelec(:,2), 'LineWidth',3); hold on;
-    polarscatter(refAngles,rhoDescriptor, 'SizeData',100);
-    for i = 1:size(rhoDescriptor,1)
-        polarplot([0;refAngles(i)],[0;rhoDescriptor(i)],'Color','red');
-    end
-    hold off;
-end
+save('RhoDescriptors04.mat','RhoDescriptors04');   
+save('RhoDescriptors05.mat','RhoDescriptors05');   
+save('RhoDescriptors06.mat','RhoDescriptors06');   
+save('RhoDescriptors07.mat','RhoDescriptors07');   
