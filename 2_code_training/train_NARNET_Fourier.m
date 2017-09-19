@@ -11,14 +11,14 @@
 clear; close all; clc;
 rng('default')
 
-load('BoundaryDescriptors.mat','BoundaryDescriptors');
-data = cellfun(@(x) (reshape(x, [], 1)),BoundaryDescriptors,'UniformOutput',false);
+load('fourierDescriptorC4.mat','fourierDescriptor');
+data = fourierDescriptor;
 
 seqLen = size(data,2);
 samples = size(data,1);
 
 trainFcn = 'trainoss';
-feedbackDelays = 1:seqLen-1;
+feedbackDelays = 1:seqLen-2;
 hiddenLayerSize = 100;
 
 
@@ -27,10 +27,9 @@ netPerfor  = zeros(numel(epochs),1);
 basePerfor = zeros(numel(epochs),1);
 for m = 1:numel(epochs)
     [tIdx, vIdx] = dividerand(samples, .85, .15);
-    trainSet = [data(tIdx,:);
-        data(tIdx,:);data(tIdx,:) ; data(tIdx,:) ; data(tIdx,:);
+    trainSet = [data(tIdx,:) ; data(tIdx,:) ;
         data(tIdx,:) ; data(tIdx,:) ; data(tIdx,:) ; data(tIdx,:);
-        data(tIdx,:)];        
+        data(tIdx,:) ; data(tIdx,:) ; data(tIdx,:) ; data(tIdx,:)];        
     valSet   = data(vIdx,:);
     for i = 1:epochs(m)
         T = trainSet(i,:);
@@ -63,7 +62,7 @@ for m = 1:numel(epochs)
     basePerfor(m) = perform(net,target,preFrame)/numel(target);
 end
 
-boundary_performance = [netPerfor basePerfor];
+fourier_performance = [netPerfor basePerfor];
 
-save('net_Boundary_narnet.mat','net')
-save('perf_Boundary.mat','boundary_performance')
+save('net_fourier_narnet.mat','net')
+save('perf_fourier.mat','fourier_performance')
