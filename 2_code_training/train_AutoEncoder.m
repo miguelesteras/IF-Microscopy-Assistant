@@ -19,6 +19,11 @@ load('dynamicImages07.mat','dynamicImages07');
 inputData = [dynamicImages ; dynamicImages04 ; dynamicImages05 ;
             dynamicImages06 ; dynamicImages07];
 
+% Compute a Gaussian pyramid reduction by one level
+for j = 1:size(inputData,1)
+    inputData{j,1} = impyramid(inputData{j,1}, 'reduce');    
+end
+
 load('RhoDescriptors.mat','RhoDescriptors');
 load('RhoDescriptors04.mat','RhoDescriptors04');
 load('RhoDescriptors05.mat','RhoDescriptors05');
@@ -50,7 +55,7 @@ Yval = outputData(vIdx,end);
 enco_fnc = ['logsig' 'satlin'];
 deco_fnc = ['logsig' 'satlin' 'purelin'];
 
-hiddenSize1 = 2000;                         	
+hiddenSize1 = 1000;                         	
 AE1 = trainAutoencoder(Xtrain,hiddenSize1, ...  % images in cell array format
     'MaxEpochs',500, ...                       % max no.epochs for early stopping
     'EncoderTransferFunction', 'logsig',...     % logistic sigmoid function
