@@ -38,13 +38,55 @@ inputTrain = inputData;
 inputTrain(vIdx,:) = [];
 randIdx = randperm(size(inputTrain,1));
 Xtrain = inputTrain(randIdx,1);
+% convet intput from cell array to 4-D matrix
+Xtrain = cat(4, Xtrain{:});
 
 outputTrain = outputData;    
 outputTrain(vIdx,:) = [];
 Ytrain = outputTrain(randIdx,end);
 
 Xval = inputData(vIdx,1);
+% convet from cell array to 4-D matrix
+Xval = cat(4, Xval{:});
 Yval = outputData(vIdx,end);
+
+% 1 convolution
+
+% define layers
+layers = [imageInputLayer([inputSize 1])
+          convolution2dLayer(10,20)
+          reluLayer
+          maxPooling2dLayer(3,'Stride',3)
+          fullyConnectedLayer(100,'Name','fc1')
+          fullyConnectedLayer(16,'Name','fc2')
+          regressionLayer];      
+      
+% training options
+options = trainingOptions('sgdm',...        % stochastic gradient descent with momentum
+    'MiniBatchSize',3,...                   % batch size (no. pictures)
+    'MaxEpochs',100,...                      % max. epochs for early stopping
+    'InitialLearnRate',0.001,...            % initial learning rate
+    'LearnRateSchedule', 'piecewise', ...   % the learning rate decreases
+    'LearnRateDropFactor', 0.1, ...         % by factor of 0.1
+    'LearnRateDropPeriod', 1);              % every 8 epochs
+
+% Train CNN
+[net,record] = trainNetwork(Xtrain, Ytrain, layers, options);
+
+% predict
+YtrainPred = predict(net,Xtrain);
+YvalPred = predict(net,Xval);
+YpreFrame = outputData(vIdx,end-1);
+netPerfor(m) = sqrt(mse(gsubtract(Yval,YvalPred)));
+basePerfor(m) = sqrt(mse(gsubtract(Yval,YpreFrame)));
+    
+CNN_performance = mat2str([netPerfor basePerfor]);
+save('perf_CNN1.mat','CNN_performance')
+save('record_CNN1.mat','record')
+save('net_CNN1.mat','net')
+
+
+% 2 concolutions
 
 % define layers
 layers = [imageInputLayer([inputSize 1])
@@ -55,19 +97,20 @@ layers = [imageInputLayer([inputSize 1])
           reluLayer
           maxPooling2dLayer(2,'Stride',2)
           fullyConnectedLayer(100,'Name','fc1')
-          fullyConnectedLayer(16,'Name','fc2')];      
-      
+          fullyConnectedLayer(16,'Name','fc2')
+          regressionLayer];
+          
 % training options
 options = trainingOptions('sgdm',...        % stochastic gradient descent with momentum
     'MiniBatchSize',3,...                   % batch size (no. pictures)
-    'MaxEpochs',10,...                      % max. epochs for early stopping
+    'MaxEpochs',100,...                      % max. epochs for early stopping
     'InitialLearnRate',0.001,...            % initial learning rate
     'LearnRateSchedule', 'piecewise', ...   % the learning rate decreases
     'LearnRateDropFactor', 0.1, ...         % by factor of 0.1
     'LearnRateDropPeriod', 1);              % every 8 epochs
 
 % Train CNN
-net = trainNetwork(Xtrain, Ytrain, layers, options);
+[net,record] = trainNetwork(Xtrain, Ytrain, layers, options);
 
 % predict
 YtrainPred = predict(net,Xtrain);
@@ -77,6 +120,6 @@ netPerfor(m) = sqrt(mse(gsubtract(Yval,YvalPred)));
 basePerfor(m) = sqrt(mse(gsubtract(Yval,YpreFrame)));
     
 CNN_performance = mat2str([netPerfor basePerfor]);
-save('perf_CNN.mat','CNN_performance')
-save('net_CNN.mat','net')
-
+save('perf_CNN2.mat','CNN_performance')
+save('record_CNN2.mat','record')
+save('net_CNN2.mat','net')

@@ -18,7 +18,7 @@ seqLength = 8;
 intScale = linspace(20,200,seqLength-1);
 
 % columns 1-2 are original data; other columns is synthetic 
-dynamicImages = [];
+dynamicImagesT = [];
 
 load('metadata.mat','metadata');
 maxRad = 113;
@@ -99,12 +99,17 @@ for i = 1:num_files
             count = count+1;
         end               
     end
-    dynamicImages = [dynamicImages ; tempDynamic];
+    dynamicImagesT = [dynamicImagesT ; tempDynamic];
 end
 
-dynamicImages   = [dynamicImages(:,1:2);
-                    dynamicImages(:,3:4); 
-                    dynamicImages(:,5:6);
-                    dynamicImages(:,7:8);
-                    dynamicImages(:,9:10)];
+dynamicImages  = dynamicImagesT(:,1);
+dynamicImages04 = dynamicImagesT(:,3);
+dynamicImages05 = dynamicImagesT(:,5);
+dynamicImages06 = dynamicImagesT(:,7);
+dynamicImages07 = dynamicImagesT(:,9);
+
 save('dynamicImages_Alexnet.mat','dynamicImages');     
+save('dynamicImages_Alexnet04.mat','dynamicImages04');     
+save('dynamicImages_Alexnet05.mat','dynamicImages05');     
+save('dynamicImages_Alexnet06.mat','dynamicImages06');     
+save('dynamicImages_Alexnet07.mat','dynamicImages07');     

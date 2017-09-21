@@ -12,7 +12,13 @@ clear; close all; clc;
 rng('default')
 
 load('dynamicImages_Alexnet.mat','dynamicImages');
-inputData = dynamicImages;
+load('dynamicImages_Alexnet04.mat','dynamicImages04');
+load('dynamicImages_Alexnet05.mat','dynamicImages05');
+load('dynamicImages_Alexnet06.mat','dynamicImages06');
+load('dynamicImages_Alexnet07.mat','dynamicImages07');
+inputData = [dynamicImages ; dynamicImages04 ; dynamicImages05 ;
+            dynamicImages06 ; dynamicImages07];
+
 % transforms grayscale images into rgb, to match alexnet structure
 inputData = cellfun(@(x) (cat(3, x, x, x)),inputData,'UniformOutput',false);
 
@@ -24,7 +30,6 @@ load('RhoDescriptors07.mat','RhoDescriptors07');
 outputData = [RhoDescriptors ; RhoDescriptors04 ; RhoDescriptors05 ;
             RhoDescriptors06 ; RhoDescriptors07];
     
-inputSize = size(inputData{1,1});
 outputsize = size(size(outputData{1,1},1));
 samples = size(inputData,1);
 
