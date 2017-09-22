@@ -88,30 +88,53 @@ AE2 = trainAutoencoder(AE1features,hiddenSize2, ...
 
 save('net_AE2.mat','AE2')
 
+%% Train feedforward layer
+
+load('net_AE2.mat','AE2')
+load('net_AE1.mat','AE1')
+% generate feautres from autoencoder1 hidden layer
+AE2features = encode(AE2,Xtrain);            
+% transform terget rho feature vectors into column vectors
+Y = cell2mat(cellfun(@(x) (reshape(x, [], 1)),Ytrain','UniformOutput',false));
+
+net = feedforwardnet([100 50]);        % create feedforward network
+% Fine-tunning
+net.trainFcn                    = 'trainoss';     % One-step secant backpropagation
+net.divideFcn                   = 'dividerand';   % data division random
+net.divideParam .trainRatio     = 0.9;              % all data used for training
+net.divideParam.valRatio        = 0.1;
+net.divideParam.testRatio       = 0;
+net.trainParam.epochs           = 1000;           % maximum number of epochs to train (for early stopping)
+net.trainParam.showCommandLine  = false;          % do not generate command-line output
+net.trainParam.showWindow       = true;           % show training GUI
+net.trainParam.max_fail         = 10;             % maximum validation failures (for early stopping)
+
+% train net
+[net, record] = train(net,X,Y);        
+save(strcat('net_AEfeedfor.mat'),'net')
+save(strcat('perf_AEfeedfor.mat'),'record') 
+
 %% Train deep network with fully connected layer
+
+load(strcat('net_AEfeedfor.mat'),'net')
 
 % transform input and output from cell array to column vectors
 X = cell2mat(cellfun(@(x) (reshape(x, [], 1)),Xtrain','UniformOutput',false));
 Y = cell2mat(cellfun(@(x) (reshape(x, [], 1)),Ytrain','UniformOutput',false));
 
-% train network stack
-FC1 = fullyConnectedLayer(200);
-FC2 = fullyConnectedLayer(100);
-FC3 = fullyConnectedLayer(16);
+% stack networks to for a deep structure
+deepNet = stack(AE1,AE2,net);
 
-network = stack(AE1,AE2,FC);
-view(network)
+deepNet.inputs{1}.size          = 25281;
+deepNet.trainFcn                = 'trainoss';   % One-step secant backpropagation
+deepNet.trainParam.epochs       = 500;          % maximum number of epochs to train (for early stopping)
+deepNet.trainParam.showWindow   = true;         % show training GUI
+deepNet.trainParam.min_grad     = 1e-6;         % minimum performance gradient (for early stopping)
+deepNet.trainParam.show         = 1;            % Epochs between displays
+deepNet.divideParam.trainRatio  = 0.9;            % all data used for training
+deepNet.divideParam.valRatio    = 0.1;            % all data used for training
 
-network.inputs{1}.size          = 25281;
-network.trainFcn                = 'trainoss';   % One-step secant backpropagation
-network.trainParam.epochs       = 500;          % maximum number of epochs to train (for early stopping)
-network.trainParam.showWindow   = true;         % show training GUI
-network.trainParam.min_grad     = 1e-6;         % minimum performance gradient (for early stopping)
-network.trainParam.show         = 1;            % Epochs between displays
-network.divideParam.trainRatio  = 0.9;            % all data used for training
-network.divideParam.valRatio    = 0.1;            % all data used for training
-
-[net, record] = train(network,X,Y);     % train network
+[net, record] = train(deepNet,X,Y);     % train network
 
 save('net_AEdeep.mat','net')
 save('record_AE.mat','record')
