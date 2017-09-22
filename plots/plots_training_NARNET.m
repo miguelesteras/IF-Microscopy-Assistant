@@ -269,4 +269,3 @@ for k = 1:numel(idx)
     figure
     imshow(I4)    
 end
-
