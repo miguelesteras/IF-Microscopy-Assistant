@@ -1,4 +1,4 @@
-%% Extras. Create Plots for feedforward network
+%% Extras. Create Plots
 %   ======================================================================
 %   Code by Miguel Esteras-Bejar, 07/2017
 %   This code is part of the project:
@@ -6,62 +6,50 @@
 %   microscopy'
 %   ======================================================================
 
-%% Fourier descriptors 
+% Fourier Descriptors
 
 clc; clear;
-cd '/Users/miguelesteras/Desktop/matlab_project/feedforward/'
-Pfiles = dir('perf_feedfor_Fourier*'); 
-Nfiles = dir('net_feedfor_Fourier*');
-num_files = length(Pfiles);
-Perf = cell(num_files,2);
-Nets = cell(num_files,2);
+cd '/Users/miguelesteras/Desktop/matlab_project/Narnet/'
 
-for i = 1:num_files
-    load(Pfiles(i).name,'record');                                     
-    Perf{i,1} = str2num(record);
-    Perf{i,2} = Pfiles(i).name;
-    
-    load(Nfiles(i).name,'net');
-    Nets{i,1} = net;
-    Nets{i,2} = Nfiles(i).name; 
-end
-  
+load('perf_Fourier_Narnet.mat','record');                                     
+Perf = str2num(record);
+
 % Plot performance (validation error during training)
-epochs = size(Perf{1,1},1);
+epochs = size(Perf,1);
 x = linspace(1,epochs,epochs);
-base = Perf{1,1}(:,2);
+base = Perf(:,2);
 
 figure
 plot(x, base, 'Color', [0 0 .5], 'LineWidth', 2); hold on
-for j = 1:num_files
-    y = Perf{j,1}(:,1);
-    plot(x, y, 'LineWidth', 3);
-end
-
+y = Perf(:,1);
+plot(x, y, 'LineWidth', 3);
+ylim([0 10])
 xlim([min(x) max(x)])
-ylim([0 1])
 grid on
 xlabel('Epochs')
 ylabel('Root Mean Square Error')
-%yticks([1 linspace(2,10,5) 100])
+yticks([1 linspace(2,10,5)])
 set(gca,'fontsize',16)
-lg = legend('Baseline','Model 1','Model 2','Model 3','Model 4','Model 5','Model 6');
+lg = legend('Baseline','Model Performance');
 lg.FontSize = 16;
-
 
 % Show reconstruction of (numEx) examples  
 numEx = 2;
-load('fourierDescriptorC4.mat','fourierDescriptor');
-dataSet = fourierDescriptor;
+load('FourierDescriptors.mat','FourierDescriptors');
+dataSet = FourierDescriptors;
 idx = randi([1 size(dataSet,1)],1,numEx); 
 data = dataSet(idx,:);
-% convert cell arrays into matrices (columns = samples)
-input = (cell2mat(cellfun(@(x) (reshape(x', 1, [])),data(:,1:end-2),'UniformOutput',false)))';
-target = (cell2mat(cellfun(@(x) (reshape(x', 1, [])),data(:,end-1),'UniformOutput',false)))';
-preFrame = (cell2mat(cellfun(@(x) (reshape(x', 1, [])),data(:,end-2),'UniformOutput',false)))';
+target = dataSet(idx,end-1);
+preFrame = dataSet(idx,end-2);
+prediction = [];
 
-net = Nets{5,1};
-prediction = net(input);
+% precit and performance
+load('net_Fourier_Narnet.mat','net');
+for j = 1:size(data,1)
+    query = data(j,1:end-2);
+    [xq,xiq,aiq,tq] = preparets(net,{},{},query);
+    prediction = [prediction ; net(xq,xiq,aiq)];
+end
 
 load('/Users/miguelesteras/Desktop/Master Project/data/cellBodyTraining.mat','cellBodyTraining');
 cells = cellBodyTraining(idx,end);
@@ -88,10 +76,10 @@ for k = 1:numel(idx)
     ImgSize = size(canvas);
     vectors = {target preFrame prediction}; 
     for v = 1:numel(vectors)        
-        a = vectors{v}(1:4,k);
-        b = vectors{v}(5:8,k);
-        c = vectors{v}(9:12,k);
-        d = vectors{v}(13:16,k);
+        a = vectors{v}{k}(1:4);
+        b = vectors{v}{k}(5:8);
+        c = vectors{v}{k}(9:12);
+        d = vectors{v}{k}(13:16);
         fourier = inverseFourierDescriptor(a,b,c,d,T,s,ImgSize);        
         red = zeros(ImgSize);
         red(fourier==1) = 255;
@@ -105,4 +93,4 @@ for k = 1:numel(idx)
         dice(v,k) = 2*nnz(canvas&imfill(fourier,'holes'))/(nnz(imfill(fourier,'holes')) + nnz(canvas));     
     end
 end
-save('dice_feedfor_fourier.mat','dice')
+save('dice_narnet_fourier.mat','dice')

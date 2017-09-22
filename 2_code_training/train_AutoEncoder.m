@@ -88,13 +88,16 @@ AE2 = trainAutoencoder(AE1features,hiddenSize2, ...
 
 save('net_AE2.mat','AE2')
 
-%% Train feedforward layer
 
+%% Train feedforward layer
 load('net_AE2.mat','AE2')
 load('net_AE1.mat','AE1')
-% generate feautres from autoencoder1 hidden layer
-AE2features = encode(AE2,Xtrain);            
-% transform terget rho feature vectors into column vectors
+
+% generate feautres from AE1 hidden layer to generate features from AE2 hidden layer
+AE1features = encode(AE1,Xtrain);            
+AE2features = encode(AE2,AE1features);            
+
+% transform target rho feature vectors into column vectors
 Y = cell2mat(cellfun(@(x) (reshape(x, [], 1)),Ytrain','UniformOutput',false));
 
 net = feedforwardnet([100 50]);        % create feedforward network
@@ -110,22 +113,24 @@ net.trainParam.showWindow       = true;           % show training GUI
 net.trainParam.max_fail         = 10;             % maximum validation failures (for early stopping)
 
 % train net
-[net, record] = train(net,X,Y);        
+[net, record] = train(net,AE2features,Y);        
 save(strcat('net_AEfeedfor.mat'),'net')
 save(strcat('perf_AEfeedfor.mat'),'record') 
 
 %% Train deep network with fully connected layer
-
-load(strcat('net_AEfeedfor.mat'),'net')
+load('net_AE2.mat','AE2')
+load('net_AE1.mat','AE1')
+load('net_AEfeedfor.mat','net')
 
 % transform input and output from cell array to column vectors
 X = cell2mat(cellfun(@(x) (reshape(x, [], 1)),Xtrain','UniformOutput',false));
 Y = cell2mat(cellfun(@(x) (reshape(x, [], 1)),Ytrain','UniformOutput',false));
+inputSize = size(X,1);
 
 % stack networks to for a deep structure
 deepNet = stack(AE1,AE2,net);
 
-deepNet.inputs{1}.size          = 25281;
+deepNet.inputs{1}.size          = inputSize;
 deepNet.trainFcn                = 'trainoss';   % One-step secant backpropagation
 deepNet.trainParam.epochs       = 500;          % maximum number of epochs to train (for early stopping)
 deepNet.trainParam.showWindow   = true;         % show training GUI

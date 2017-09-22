@@ -1,4 +1,4 @@
-%% Extras. Create Plots for feedforward network
+%% Extras. Create Plots
 %   ======================================================================
 %   Code by Miguel Esteras-Bejar, 07/2017
 %   This code is part of the project:
@@ -6,59 +6,50 @@
 %   microscopy'
 %   ======================================================================
 
-%% Boundary
-clear; close all; clc
+% Boundary Descriptors
 
-Pfiles = dir('perf_feedfor_Boundary*'); 
-Nfiles = dir('net_feedfor_Boundary*');
-num_files = length(Pfiles);
-Perf = cell(num_files,2);
-Nets = cell(num_files,2);
+clc; clear;
+cd '/Users/miguelesteras/Desktop/matlab_project/Narnet/'
 
-for i = 1:num_files
-    load(Pfiles(i).name,'record');                                     
-    Perf{i,1} = str2num(record);
-    Perf{i,2} = Pfiles(i).name;
-    
-    load(Nfiles(i).name,'net');
-    Nets{i,1} = net;
-    Nets{i,2} = Nfiles(i).name; 
-end
-  
+load('perf_Boundary_Narnet.mat','record');                                     
+Perf = str2num(record);
+
 % Plot performance (validation error during training)
-epochs = size(Perf{1,1},1);
+epochs = size(Perf,1);
 x = linspace(1,epochs,epochs);
-base = Perf{1,1}(:,2);
+base = Perf(:,2);
 
 figure
 plot(x, base, 'Color', [0 0 .5], 'LineWidth', 2); hold on
-for j = 1:num_files
-    y = Perf{j,1}(:,1);
-    plot(x, y, 'LineWidth', 3);
-end
-
+y = Perf(:,1);
+plot(x, y, 'LineWidth', 3);
+ylim([0 10])
 xlim([min(x) max(x)])
 grid on
 xlabel('Epochs')
-ylabel('Root Mean Square Error (log scale)')
-yticks([10 linspace(20,50,4) 100])
-set(gca,'fontsize',16,'YScale', 'log')
-lg = legend('Baseline','Model 1','Model 2','Model 3','Model 4','Model 5','Model 6');
+ylabel('Root Mean Square Error')
+yticks([1 linspace(2,10,5)])
+set(gca,'fontsize',16)
+lg = legend('Baseline','Model Performance');
 lg.FontSize = 16;
 
-% Show reconstruction of (numEx) examples 
+% Show reconstruction of (numEx) examples  
 numEx = 2;
 load('BoundaryDescriptors.mat','BoundaryDescriptors');
 dataSet = BoundaryDescriptors;
 idx = randi([1 size(dataSet,1)],1,numEx); 
 data = dataSet(idx,:);
-% convert cell arrays into matrices (columns = samples)
-input = (cell2mat(cellfun(@(x) (reshape(x', 1, [])),data(:,1:end-1),'UniformOutput',false)))';
-target = dataSet(idx,end); 
+target = dataSet(idx,end);
 preFrame = dataSet(idx,end-1);
+prediction = [];
 
-net = Nets{5,1};
-prediction = net(input);
+% precit and performance
+load('net_Bondary_Narnet.mat','net');
+for j = 1:size(data,1)
+    query = data(j,1:end-1);
+    [xq,xiq,aiq,tq] = preparets(net,{},{},query);
+    prediction = [prediction ; net(xq,xiq,aiq)];
+end
 
 load('/Users/miguelesteras/Desktop/Master Project/data/cellBodyTraining.mat','cellBodyTraining');
 cells = cellBodyTraining(idx,end);
@@ -86,33 +77,31 @@ for k = 1:numel(idx)
     I3 = insertMarker(I,mask3,'Size',5, 'Color','blue');
     figure
     imshow(I3)
-    i1 = linspace(1,39,20);
-    i2 = linspace(2,40,20);
-    mask4 = [prediction(i1,k) prediction(i2,k)];
+    mask4 = [prediction{k}(1:20) prediction{k}(21:40)];
     mask4 = (mask4*diag([2 -2]))+100;
     I4 = insertMarker(I,mask4,'Size',5, 'Color','blue');
     figure
     imshow(I4)    
 end
 
-%% Dice coefficient
 
+
+%% Dice coefficient
 numEx = 2;
 idx = randi([1 size(dataSet,1)],1,numEx); 
 data = dataSet(idx,:);
-
-% convert cell arrays into matrices (columns = samples)
-input = (cell2mat(cellfun(@(x) (reshape(x', 1, [])),data(:,1:end-1),'UniformOutput',false)))';
-target = dataSet(idx,end); 
+target = dataSet(idx,end);
 preFrame = dataSet(idx,end-1);
+prediction = [];
 
-net = Nets{5,1};
-prediction = num2cell(net(input),1);
-% reshape prediction column matrix into cell array 
-i1 = linspace(1,39,20);
-i2 = linspace(2,40,20);
-prediction = (cellfun(@(x) ([x(i1) x(i2)]),prediction,'UniformOutput',false));
-
+% precit and performance
+load('net_Bondary_Narnet.mat','net');
+for j = 1:size(data,1)
+    query = data(j,1:end-1);
+    [xq,xiq,aiq,tq] = preparets(net,{},{},query);
+    prediction = [prediction ; net(xq,xiq,aiq)];
+end
+prediction = (cellfun(@(x) ([x(1:20) x(21:40)]),prediction,'UniformOutput',false));
 
 load('/Users/miguelesteras/Desktop/Master Project/data/cellBodyTraining.mat','cellBodyTraining');
 cells = cellBodyTraining(idx,end);
@@ -149,4 +138,4 @@ for k = 1:numel(idx)
         dice(v,k) = 2*nnz(canvas&canvas2)/(nnz(canvas2) + nnz(canvas));  
     end
 end
-save('dice_feedfor_boundary.mat','dice')
+save('dice_narnet_boundary.mat','dice')

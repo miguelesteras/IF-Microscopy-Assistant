@@ -1,4 +1,4 @@
-%% Extras. Create Plots for feedforward network
+%% Extras. Create Plots
 %   ======================================================================
 %   Code by Miguel Esteras-Bejar, 07/2017
 %   This code is part of the project:
@@ -9,44 +9,29 @@
 %% Rho descriptors 
 
 clc; clear;
-cd '/Users/miguelesteras/Desktop/matlab_project/feedforward/'
-Pfiles = dir('perf_feedfor_Rho*'); 
-Nfiles = dir('net_feedfor_Rho*');
-num_files = length(Pfiles);
-Perf = cell(num_files,2);
-Nets = cell(num_files,2);
+cd '/Users/miguelesteras/Desktop/matlab_project/Narnet/'
 
-for i = 1:num_files
-    load(Pfiles(i).name,'record');                                     
-    Perf{i,1} = str2num(record);
-    Perf{i,2} = Pfiles(i).name;
-    
-    load(Nfiles(i).name,'net');
-    Nets{i,1} = net;
-    Nets{i,2} = Nfiles(i).name; 
-end
-  
+load('perf_Rho_Narnet.mat','record');                                     
+Perf = str2num(record);
+
 % Plot performance (validation error during training)
-epochs = size(Perf{1,1},1);
+epochs = size(Perf,1);
 x = linspace(1,epochs,epochs);
-base = Perf{1,1}(:,2);
+base = Perf(:,2);
 
 figure
 plot(x, base, 'Color', [0 0 .5], 'LineWidth', 2); hold on
-for j = 1:num_files
-    y = Perf{j,1}(:,1);
-    plot(x, y, 'LineWidth', 3);
-end
-
+y = Perf(:,1);
+plot(x, y, 'LineWidth', 3);
+ylim([0 10])
 xlim([min(x) max(x)])
 grid on
 xlabel('Epochs')
-ylabel('Root Mean Square Error (log scale)')
-yticks([1 linspace(2,10,5) 100])
-set(gca,'fontsize',16,'YScale', 'log')
-lg = legend('Baseline','Model 1','Model 2','Model 3','Model 4','Model 5','Model 6');
+ylabel('Root Mean Square Error')
+yticks([1 linspace(2,10,5)])
+set(gca,'fontsize',16)
+lg = legend('Baseline','Model Performance');
 lg.FontSize = 16;
-
 
 % Show reconstruction of (numEx) examples  
 numEx = 2;
@@ -54,15 +39,19 @@ load('RhoDescriptors.mat','RhoDescriptors');
 dataSet = RhoDescriptors;
 idx = randi([1 size(dataSet,1)],1,numEx); 
 data = dataSet(idx,:);
-% convert cell arrays into matrices (columns = samples)
-input = (cell2mat(cellfun(@(x) (reshape(x', 1, [])),data(:,1:end-1),'UniformOutput',false)))';
-target = (cell2mat(cellfun(@(x) (reshape(x', 1, [])),data(:,end),'UniformOutput',false)))';
-preFrame = (cell2mat(cellfun(@(x) (reshape(x', 1, [])),data(:,end-1),'UniformOutput',false)))';
+target = dataSet(idx,end);
+preFrame = dataSet(idx,end-1);
+prediction = [];
 
-net = Nets{5,1};
-prediction = net(input);
+% precit and performance
+load('net_Rho_Narnet.mat','net');
+for j = 1:size(data,1)
+    query = data(j,1:end-1);
+    [xq,xiq,aiq,tq] = preparets(net,{},{},query);
+    prediction = [prediction ; net(xq,xiq,aiq)];
+end
 
-vecSize   = size(prediction,1);            
+vecSize   = 16;            
 refAngles = linspace(0,2*pi,vecSize+1);
 refAngles = refAngles(1:end-1);
 load('/Users/miguelesteras/Desktop/Master Project/data/cellBodyTraining.mat','cellBodyTraining');
@@ -73,9 +62,9 @@ for k = 1:numel(idx)
     polarscatter(cells{k}(:,1), cells{k}(:,2),'filled',...
         'MarkerFaceAlpha',0.7,'MarkerFaceColor',[.7 .7 .7],...
         'MarkerEdgeColor','none'); hold on;
-    polarscatter(refAngles,target(:,k), 'SizeData',100);
-    for m = 1:numel(target(:,k))
-        polarplot([0;refAngles(m)],[0;target(m,k)],'Color','red');
+    polarscatter(refAngles,target{k}, 'SizeData',100);
+    for m = 1:numel(target{k})
+        polarplot([0;refAngles(m)],[0;target{k}(m)],'Color','red');
     end
     pax = gca;
     pax.ThetaAxisUnits = 'radians';
@@ -88,7 +77,7 @@ for k = 1:numel(idx)
     polarscatter(cells{k}(:,1), cells{k}(:,2),...
         'MarkerFaceAlpha',0.7,'MarkerFaceColor',[.7 .7 .7],...
         'MarkerEdgeColor','none'); hold on;
-    rhoLine = [refAngles' preFrame(:,k)];
+    rhoLine = [refAngles' preFrame{k}];
     rhoLine = [rhoLine ; rhoLine(1,:)];
     polarplot(rhoLine(:,1),rhoLine(:,2),'b','lineWidth',3); 
     pax = gca;
@@ -102,7 +91,7 @@ for k = 1:numel(idx)
     polarscatter(cells{k}(:,1), cells{k}(:,2),...
         'MarkerFaceAlpha',0.7,'MarkerFaceColor',[.7 .7 .7],...
         'MarkerEdgeColor','none'); hold on;
-    rhoLine = [refAngles' prediction(:,k)];
+    rhoLine = [refAngles' prediction{k}];
     rhoLine = [rhoLine ; rhoLine(1,:)];
     polarplot(rhoLine(:,1),rhoLine(:,2),'g','lineWidth',3); 
     pax = gca;
@@ -114,20 +103,22 @@ for k = 1:numel(idx)
     
 end
 
-%% Dice coefficient
 
+%% Dice coefficient
 numEx = 2;
 idx = randi([1 size(dataSet,1)],1,numEx); 
 data = dataSet(idx,:);
-
-% convert cell arrays into matrices (columns = samples)
-input = (cell2mat(cellfun(@(x) (reshape(x', 1, [])),data(:,1:end-1),'UniformOutput',false)))';
-target = dataSet(idx,end); 
+target = dataSet(idx,end);
 preFrame = dataSet(idx,end-1);
+prediction = [];
 
-net = Nets{5,1};
-prediction = num2cell(net(input),1);
-% reshape prediction column matrix into cell array 
+% precit and performance
+load('net_Rho_Narnet.mat','net');
+for j = 1:size(data,1)
+    query = data(j,1:end-1);
+    [xq,xiq,aiq,tq] = preparets(net,{},{},query);
+    prediction = [prediction ; net(xq,xiq,aiq)];
+end
 
 load('/Users/miguelesteras/Desktop/Master Project/data/cellBodyTraining.mat','cellBodyTraining');
 cells = cellBodyTraining(idx,end);
@@ -147,7 +138,7 @@ for k = 1:numel(idx)
     I(I==1) = 0.75;
     I(I==0) = 1;
     ImgSize = size(canvas);
-    vectors = {target preFrame prediction'}; 
+    vectors = {target preFrame prediction}; 
     for v = 1:numel(vectors)
         [x,y] = pol2cart(refAngles',vectors{v}{k});
         canvas2 = poly2mask((round(x)*2)+100,(round(y)*-2)+100,200,200);
@@ -163,4 +154,4 @@ for k = 1:numel(idx)
         dice(v,k) = 2*nnz(canvas&canvas2)/(nnz(canvas2) + nnz(canvas));  
     end
 end
-save('dice_feedfor_rho.mat','dice')
+save('dice_narnet_rho.mat','dice')
