@@ -11,7 +11,7 @@
 clc; clear;
 cd '/Users/miguelesteras/Desktop/matlab_project/Narnet/'
 
-load('perf_Rho_Narnet.mat','record');                                     
+load('perf_Rho_Narnet50.mat','record');                                     
 Perf = str2num(record);
 
 % Plot performance (validation error during training)
@@ -44,7 +44,7 @@ preFrame = dataSet(idx,end-1);
 prediction = [];
 
 % precit and performance
-load('net_Rho_Narnet.mat','net');
+load('net_Rho_Narnet50.mat','net');
 for j = 1:size(data,1)
     query = data(j,1:end-1);
     [xq,xiq,aiq,tq] = preparets(net,{},{},query);
@@ -113,7 +113,7 @@ preFrame = dataSet(idx,end-1);
 prediction = [];
 
 % precit and performance
-load('net_Rho_Narnet.mat','net');
+load('net_Rho_Narnet50.mat','net');
 for j = 1:size(data,1)
     query = data(j,1:end-1);
     [xq,xiq,aiq,tq] = preparets(net,{},{},query);
@@ -154,4 +154,4 @@ for k = 1:numel(idx)
         dice(v,k) = 2*nnz(canvas&canvas2)/(nnz(canvas2) + nnz(canvas));  
     end
 end
-save('dice_narnet_rho.mat','dice')
+save('dice_narnet50_rho.mat','dice')

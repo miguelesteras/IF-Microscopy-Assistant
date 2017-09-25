@@ -127,7 +127,6 @@ preFrame = dataSet(idx,end-1);
 
 net = Nets{5,1};
 prediction = num2cell(net(input),1);
-% reshape prediction column matrix into cell array 
 
 load('/Users/miguelesteras/Desktop/Master Project/data/cellBodyTraining.mat','cellBodyTraining');
 cells = cellBodyTraining(idx,end);
