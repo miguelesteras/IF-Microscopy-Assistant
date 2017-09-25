@@ -7,6 +7,7 @@
 %   This codes aims to:
 %   1. create a data set with sequencial frames of single cells 
 %   ======================================================================
+clear; close all; clc
 
 summaryLength = [];
 files = dir('*_metadata.mat');      
