@@ -51,7 +51,7 @@ lg.FontSize = 16;
 
 % Show reconstruction of (numEx) examples  
 numEx = 200;
-load('fourierDescriptorC4.mat','fourierDescriptor');
+load('/Users/miguelesteras/Desktop/Master Project/data/fourierDescriptorC4.mat','fourierDescriptor');
 dataSet = fourierDescriptor;
 idx = randi([1 size(dataSet,1)],1,numEx); 
 data = dataSet(idx,:);
@@ -92,17 +92,37 @@ for k = 1:numel(idx)
         b = vectors{v}(5:8,k);
         c = vectors{v}(9:12,k);
         d = vectors{v}(13:16,k);
-        fourier = inverseFourierDescriptor(a,b,c,d,T,s,ImgSize);        
-        red = zeros(ImgSize);
-        red(fourier==1) = 255;
+        BW = inverseFourierDescriptor(a,b,c,d,T,s,ImgSize);
+        BW2 = imfill(BW,'holes');
+        CC = regionprops(BW2,'BoundingBox');
+        CC2 = regionprops(canvas,'BoundingBox');
+        BW2area = CC(1).BoundingBox(3)*CC(1).BoundingBox(4);
+        canvasArea = CC2(1).BoundingBox(3)*CC2(1).BoundingBox(4);
+        ratio = sqrt(canvasArea/BW2area);
+        BW3 = imresize(BW2,ratio);
+        border = ceil((size(BW3,1)-300)/2);
+        BW4 = imcrop(BW3,[border border 299 299]);
+%         fourier = bwmorph(BW4,'remove');       
+%         color = zeros(ImgSize);
+%         color(fourier==1) = 255;
 %         I2 = I;
-%         I2(:,:,1) = I(:,:,1) + red;
-%         I2(:,:,2) = I(:,:,2) - red;
-%         I2(:,:,3) = I(:,:,3) - red;
+%         if v == 1
+%             I2(:,:,1) = I(:,:,1) + color;
+%             I2(:,:,2) = I(:,:,2) - color;
+%             I2(:,:,3) = I(:,:,3) - color;
+%         elseif v ==2
+%             I2(:,:,1) = I(:,:,1) - color;
+%             I2(:,:,2) = I(:,:,2) - color;
+%             I2(:,:,3) = I(:,:,3) + color/2;
+%         else 
+%             I2(:,:,1) = I(:,:,1) - color;
+%             I2(:,:,2) = I(:,:,2) + color/2;
+%             I2(:,:,3) = I(:,:,3) - color;
+%         end
 %         figure
 %         imshow(I2);
         % compute Sørensen-Dice Coefficient between original image and reconstructed 
-        dice(v,k) = 2*nnz(canvas&imfill(fourier,'holes'))/(nnz(imfill(fourier,'holes')) + nnz(canvas));     
+        dice(v,k) = 2*nnz(canvas&BW4)/(nnz(BW4) + nnz(canvas));     
     end
 end
 save('dice_feedfor_fourier.mat','dice')

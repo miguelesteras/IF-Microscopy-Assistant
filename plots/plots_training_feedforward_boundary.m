@@ -37,6 +37,7 @@ for j = 1:num_files
     plot(x, y, 'LineWidth', 3);
 end
 
+ylim([10 100])
 xlim([min(x) max(x)])
 grid on
 xlabel('Epochs')
@@ -47,8 +48,8 @@ lg = legend('Baseline','Model 1','Model 2','Model 3','Model 4','Model 5','Model 
 lg.FontSize = 16;
 
 % Show reconstruction of (numEx) examples 
-numEx = 2;
-load('BoundaryDescriptors.mat','BoundaryDescriptors');
+numEx = 4;
+load('/Users/miguelesteras/Desktop/Master Project/data/BoundaryDescriptors.mat','BoundaryDescriptors');
 dataSet = BoundaryDescriptors;
 idx = randi([1 size(dataSet,1)],1,numEx); 
 data = dataSet(idx,:);
@@ -90,7 +91,7 @@ for k = 1:numel(idx)
     i2 = linspace(2,40,20);
     mask4 = [prediction(i1,k) prediction(i2,k)];
     mask4 = (mask4*diag([2 -2]))+100;
-    I4 = insertMarker(I,mask4,'Size',5, 'Color','blue');
+    I4 = insertMarker(I,mask4,'Size',5, 'Color','green');
     figure
     imshow(I4)    
 end
