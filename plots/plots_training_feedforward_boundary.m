@@ -97,7 +97,7 @@ end
 
 %% Dice coefficient
 
-numEx = 2;
+numEx = 200;
 idx = randi([1 size(dataSet,1)],1,numEx); 
 data = dataSet(idx,:);
 
@@ -123,28 +123,28 @@ for k = 1:numel(idx)
     selection(:,1) = wrapTo2Pi(selection(:,1) + pi); 
     [x,y] = pol2cart(selection(:,1),selection(:,2));
     mask = [round(x) round(y)];
-    ind = sub2ind([200,200], (mask(:,2)*-2)+100, (mask(:,1)*2)+100);
-    canvas = false(200,200);
+    ind = sub2ind([300,300], (mask(:,2)*-2)+150, (mask(:,1)*2)+150);
+    canvas = false(300,300);
     canvas(ind) = true;    
     canvas = imfill(bwmorph(imfill(canvas,'holes'),'bridge'),'holes');
     se = strel('disk',7);
     canvas = imopen(canvas,se);
-    I = double(cat(3, canvas, canvas, canvas));
-    I(I==1) = 0.75;
-    I(I==0) = 1;
+%     I = double(cat(3, canvas, canvas, canvas));
+%     I(I==1) = 0.75;
+%     I(I==0) = 1;
     ImgSize = size(canvas);
     vectors = {target preFrame prediction}; 
     for v = 1:numel(vectors)        
-        points = (vectors{v}{k}*diag([2 -2]))+100;
-        canvas2 = poly2mask(points(:,1),points(:,2),200,200);
+        points = (vectors{v}{k}*diag([2 -2]))+150;
+        canvas2 = poly2mask(points(:,1),points(:,2),300,300);
         red = zeros(ImgSize);
         red(bwmorph(canvas2,'remove')==1) = 255;
-        I2 = I;
-        I2(:,:,1) = I(:,:,1) + red;
-        I2(:,:,2) = I(:,:,2) - red;
-        I2(:,:,3) = I(:,:,3) - red;
-        figure
-        imshow(I2);
+%         I2 = I;
+%         I2(:,:,1) = I(:,:,1) + red;
+%         I2(:,:,2) = I(:,:,2) - red;
+%         I2(:,:,3) = I(:,:,3) - red;
+%         figure
+%         imshow(I2);
         % compute Sørensen-Dice Coefficient between original image and reconstructed 
         dice(v,k) = 2*nnz(canvas&canvas2)/(nnz(canvas2) + nnz(canvas));  
     end

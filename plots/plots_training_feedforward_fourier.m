@@ -50,7 +50,7 @@ lg.FontSize = 16;
 
 
 % Show reconstruction of (numEx) examples  
-numEx = 2;
+numEx = 200;
 load('fourierDescriptorC4.mat','fourierDescriptor');
 dataSet = fourierDescriptor;
 idx = randi([1 size(dataSet,1)],1,numEx); 
@@ -72,15 +72,15 @@ for k = 1:numel(idx)
     selection(:,1) = wrapTo2Pi(selection(:,1) + pi/2); 
     [x,y] = pol2cart(selection(:,1),selection(:,2));
     mask = [round(x) round(y)];
-    ind = sub2ind([200,200], (mask(:,2)*-2)+100, (mask(:,1)*2)+100);
-    canvas = false(200,200);
+    ind = sub2ind([300,300], (mask(:,2)*-2)+150, (mask(:,1)*2)+150);
+    canvas = false(300,300);
     canvas(ind) = true;    
     canvas = imfill(bwmorph(imfill(canvas,'holes'),'bridge'),'holes');
     se = strel('disk',7);
     canvas = imopen(canvas,se);
-    I = double(cat(3, canvas, canvas, canvas));
-    I(I==1) = 0.75;
-    I(I==0) = 1;
+%     I = double(cat(3, canvas, canvas, canvas));
+%     I(I==1) = 0.75;
+%     I(I==0) = 1;
     
     % inverse fourier transformation
     T = 300;
@@ -95,12 +95,12 @@ for k = 1:numel(idx)
         fourier = inverseFourierDescriptor(a,b,c,d,T,s,ImgSize);        
         red = zeros(ImgSize);
         red(fourier==1) = 255;
-        I2 = I;
-        I2(:,:,1) = I(:,:,1) + red;
-        I2(:,:,2) = I(:,:,2) - red;
-        I2(:,:,3) = I(:,:,3) - red;
-        figure
-        imshow(I2);
+%         I2 = I;
+%         I2(:,:,1) = I(:,:,1) + red;
+%         I2(:,:,2) = I(:,:,2) - red;
+%         I2(:,:,3) = I(:,:,3) - red;
+%         figure
+%         imshow(I2);
         % compute Sørensen-Dice Coefficient between original image and reconstructed 
         dice(v,k) = 2*nnz(canvas&imfill(fourier,'holes'))/(nnz(imfill(fourier,'holes')) + nnz(canvas));     
     end
